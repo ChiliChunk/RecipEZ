@@ -11,8 +11,13 @@ import {
 } from 'react-native';
 import { colors, spacing, borderRadius, fontSize, shadow } from '../styles/theme';
 import { scrapeRecipe, ScraperError } from '../services/recipeScraper';
+import type { Recipe } from '../types/recipe';
 
-export default function Home() {
+interface Props {
+  onSelectRecipe: (recipe: Recipe) => void;
+}
+
+export default function Home({ onSelectRecipe }: Props) {
   const [modalVisible, setModalVisible] = useState(false);
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,7 +30,7 @@ export default function Home() {
       const recipe = await scrapeRecipe(url);
       setUrl('');
       setModalVisible(false);
-      // TODO: stocker la recette importée
+      onSelectRecipe(recipe);
     } catch (err) {
       if (err instanceof ScraperError) {
         setError(err.message);
