@@ -8,16 +8,40 @@ import {
   Pressable,
   TextInput,
   ActivityIndicator,
+  FlatList,
+  Image,
 } from 'react-native';
 import { colors, spacing, borderRadius, fontSize, shadow } from '../styles/theme';
 import { scrapeRecipe, ScraperError } from '../services/recipeScraper';
-import type { Recipe } from '../types/recipe';
+import type { Recipe, StoredRecipe } from '../types/recipe';
 
 interface Props {
-  onSelectRecipe: (recipe: Recipe) => void;
+  recipes: StoredRecipe[];
+  onRecipeImported: (recipe: Recipe) => void;
+  onSelectRecipe: (recipe: StoredRecipe) => void;
 }
 
-export default function Home({ onSelectRecipe }: Props) {
+function RecipeCard({ recipe, onPress }: { recipe: StoredRecipe; onPress: () => void }) {
+  return (
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.75}>
+      {recipe.imageUrl ? (
+        <Image source={{ uri: recipe.imageUrl }} style={styles.cardImage} />
+      ) : (
+        <View style={[styles.cardImage, styles.cardImagePlaceholder]}>
+          <Text style={styles.cardImagePlaceholderText}>🍽</Text>
+        </View>
+      )}
+      <View style={styles.cardBody}>
+        <Text style={styles.cardTitle} numberOfLines={2}>{recipe.title}</Text>
+        {recipe.servings && (
+          <Text style={styles.cardServings}>{recipe.servings}</Text>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+export default function Home({ recipes, onRecipeImported, onSelectRecipe }: Props) {
   const [modalVisible, setModalVisible] = useState(false);
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
@@ -30,7 +54,7 @@ export default function Home({ onSelectRecipe }: Props) {
       const recipe = await scrapeRecipe(url);
       setUrl('');
       setModalVisible(false);
-      onSelectRecipe(recipe);
+      onRecipeImported(recipe);
     } catch (err) {
       if (err instanceof ScraperError) {
         setError(err.message);
@@ -44,7 +68,24 @@ export default function Home({ onSelectRecipe }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>RecipEZ - Mon livre de recettes</Text>
+      <Text style={styles.title}>Mon livre de recettes</Text>
+
+      {recipes.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyStateText}>
+            Aucune recette enregistrée.{'\n'}Importez votre première recette !
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={recipes}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          renderItem={({ item }) => (
+            <RecipeCard recipe={item} onPress={() => onSelectRecipe(item)} />
+          )}
+        />
+      )}
 
       <Modal
         animationType="slide"
@@ -114,8 +155,69 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  title: {
+    fontSize: fontSize.lg,
+    fontWeight: 'bold',
+    color: colors.text,
+    paddingTop: 54,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
+  },
+  emptyState: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: spacing.xl,
+  },
+  emptyStateText: {
+    fontSize: fontSize.md,
+    color: colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  list: {
+    paddingHorizontal: spacing.md,
+    paddingBottom: 100,
+  },
+  card: {
+    flexDirection: 'row',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.sm,
+    overflow: 'hidden',
+    elevation: shadow.elevation,
+    shadowColor: shadow.color,
+    shadowOffset: shadow.offset,
+    shadowOpacity: shadow.opacity,
+    shadowRadius: shadow.radius,
+  },
+  cardImage: {
+    width: 90,
+    height: 90,
+  },
+  cardImagePlaceholder: {
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardImagePlaceholderText: {
+    fontSize: fontSize.xl,
+  },
+  cardBody: {
+    flex: 1,
+    padding: spacing.sm,
+    justifyContent: 'center',
+  },
+  cardTitle: {
+    fontSize: fontSize.md,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  cardServings: {
+    fontSize: fontSize.sm,
+    color: colors.textMuted,
   },
   fab: {
     position: 'absolute',
@@ -135,7 +237,7 @@ const styles = StyleSheet.create({
   },
   fabIcon: {
     fontSize: fontSize.xl,
-    color: colors.white,
+    color: colors.surface,
   },
   modalOverlay: {
     flex: 1,
@@ -149,11 +251,6 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     padding: spacing.xl,
     alignItems: 'center',
-  },
-  title: {
-    fontSize: fontSize.lg,
-    fontWeight: 'bold',
-    color: colors.text,
   },
   modalTitle: {
     fontSize: fontSize.lg,

@@ -9,3 +9,8 @@ export interface Recipe {
   servings: string | null;
   sourceUrl: string;
 }
+
+export interface StoredRecipe extends Recipe {
+  id: string;
+  savedAt: number;
+}
