@@ -13,6 +13,12 @@ export async function loadRecipes(): Promise<StoredRecipe[]> {
   }
 }
 
+export async function updateRecipe(updated: StoredRecipe): Promise<void> {
+  const existing = await loadRecipes();
+  const next = existing.map((r) => (r.id === updated.id ? updated : r));
+  await AsyncStorage.setItem(RECIPES_KEY, JSON.stringify(next));
+}
+
 export async function saveRecipe(recipe: Recipe): Promise<StoredRecipe> {
   const stored: StoredRecipe = {
     ...recipe,

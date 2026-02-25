@@ -4,7 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Home from './screens/Home';
 import RecipeDetail from './screens/RecipeDetail';
-import { loadRecipes, saveRecipe } from './services/recipeStorage';
+import { loadRecipes, saveRecipe, updateRecipe } from './services/recipeStorage';
 
 const Stack = createNativeStackNavigator();
 
@@ -14,6 +14,11 @@ export default function App() {
   useEffect(() => {
     loadRecipes().then(setRecipes);
   }, []);
+
+  const handleUpdateRecipe = async (updated) => {
+    await updateRecipe(updated);
+    setRecipes((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+  };
 
   const handleSaveRecipe = async (recipe) => {
     const stored = await saveRecipe(recipe);
@@ -33,7 +38,9 @@ export default function App() {
             />
           )}
         </Stack.Screen>
-        <Stack.Screen name="RecipeDetail" component={RecipeDetail} />
+        <Stack.Screen name="RecipeDetail">
+          {(props) => <RecipeDetail {...props} onRecipeUpdated={handleUpdateRecipe} />}
+        </Stack.Screen>
       </Stack.Navigator>
       <StatusBar style="auto" />
     </NavigationContainer>
