@@ -91,7 +91,7 @@ export default function Home({ navigation, recipes, onRecipeImported }: Props) {
       )}
 
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
