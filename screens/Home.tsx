@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 import {
   StyleSheet,
   Text,
@@ -9,20 +9,26 @@ import {
   TextInput,
   ActivityIndicator,
   Image,
-} from 'react-native';
+} from "react-native";
 import DraggableFlatList, {
   ScaleDecorator,
   type RenderItemParams,
-} from 'react-native-draggable-flatlist';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, borderRadius, fontSize, shadow } from '../styles/theme';
-import { scrapeRecipe, ScraperError } from '../services/recipeScraper';
-import { useRecipes } from '../contexts/RecipesContext';
-import type { StoredRecipe } from '../types/recipe';
-import type { RootStackParamList } from '../types/navigation';
+} from "react-native-draggable-flatlist";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import {
+  colors,
+  spacing,
+  borderRadius,
+  fontSize,
+  shadow,
+} from "../styles/theme";
+import { scrapeRecipe, ScraperError } from "../services/recipeScraper";
+import { useRecipes } from "../contexts/RecipesContext";
+import type { StoredRecipe } from "../types/recipe";
+import type { RootStackParamList } from "../types/navigation";
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
+type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 
 function RecipeCard({
   recipe,
@@ -53,7 +59,9 @@ function RecipeCard({
           </View>
         )}
         <View style={styles.cardBody}>
-          <Text style={styles.cardTitle} numberOfLines={2}>{recipe.title}</Text>
+          <Text style={styles.cardTitle} numberOfLines={2}>
+            {recipe.title}
+          </Text>
           {recipe.servings && (
             <Text style={styles.cardServings}>{recipe.servings}</Text>
           )}
@@ -66,7 +74,7 @@ function RecipeCard({
 export default function Home({ navigation }: Props) {
   const { recipes, saveRecipe, reorderRecipes } = useRecipes();
   const [modalVisible, setModalVisible] = useState(false);
-  const [url, setUrl] = useState('');
+  const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,15 +83,15 @@ export default function Home({ navigation }: Props) {
     setLoading(true);
     try {
       const recipe = await scrapeRecipe(url);
-      setUrl('');
+      setUrl("");
       setModalVisible(false);
       const stored = await saveRecipe(recipe);
-      navigation.navigate('RecipeDetail', { recipe: stored });
+      navigation.navigate("RecipeDetail", { recipe: stored });
     } catch (err) {
       if (err instanceof ScraperError) {
         setError(err.message);
       } else {
-        setError('Une erreur inattendue est survenue');
+        setError("Une erreur inattendue est survenue");
       }
     } finally {
       setLoading(false);
@@ -94,7 +102,7 @@ export default function Home({ navigation }: Props) {
     ({ item, drag, isActive }: RenderItemParams<StoredRecipe>) => (
       <RecipeCard
         recipe={item}
-        onPress={() => navigation.navigate('RecipeDetail', { recipe: item })}
+        onPress={() => navigation.navigate("RecipeDetail", { recipe: item })}
         drag={drag}
         isActive={isActive}
       />
@@ -111,12 +119,22 @@ export default function Home({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Mon livre de recettes</Text>
+      <View style={styles.header}>
+        <View style={styles.headerSpacer} />
+        <Text style={styles.title}>RecipEZ</Text>
+        <TouchableOpacity onPress={() => setModalVisible(true)} hitSlop={8}>
+          <MaterialCommunityIcons
+            name="bookmark-plus"
+            size={24}
+            color={colors.primary}
+          />
+        </TouchableOpacity>
+      </View>
 
       {recipes.length === 0 ? (
         <View style={styles.emptyState}>
           <Text style={styles.emptyStateText}>
-            Aucune recette enregistrée.{'\n'}Importez votre première recette !
+            Aucune recette enregistrée.{"\n"}Importez votre première recette !
           </Text>
         </View>
       ) : (
@@ -161,7 +179,7 @@ export default function Home({ navigation }: Props) {
               <TouchableOpacity
                 style={styles.cancelButton}
                 onPress={() => {
-                  setUrl('');
+                  setUrl("");
                   setError(null);
                   setModalVisible(false);
                 }}
@@ -169,7 +187,10 @@ export default function Home({ navigation }: Props) {
                 <Text style={styles.cancelButtonText}>Annuler</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.submitButton, (!url || loading) && styles.submitButtonDisabled]}
+                style={[
+                  styles.submitButton,
+                  (!url || loading) && styles.submitButtonDisabled,
+                ]}
                 disabled={!url || loading}
                 onPress={handleImport}
               >
@@ -199,24 +220,32 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  title: {
-    fontSize: fontSize.lg,
-    fontWeight: 'bold',
-    color: colors.text,
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingTop: 54,
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.sm,
   },
+  headerSpacer: {
+    width: 24,
+  },
+  title: {
+    fontSize: 32,
+    fontFamily: "Barriecito_400Regular",
+    color: colors.primary,
+  },
   emptyState: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: spacing.xl,
   },
   emptyStateText: {
     fontSize: fontSize.md,
     color: colors.textMuted,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 24,
   },
   list: {
@@ -224,11 +253,11 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   card: {
-    flexDirection: 'row',
+    flexDirection: "row",
     backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     marginBottom: spacing.sm,
-    overflow: 'hidden',
+    overflow: "hidden",
     elevation: shadow.elevation,
     shadowColor: shadow.color,
     shadowOffset: shadow.offset,
@@ -246,8 +275,8 @@ const styles = StyleSheet.create({
   },
   cardImagePlaceholder: {
     backgroundColor: colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   cardImagePlaceholderText: {
     fontSize: fontSize.xl,
@@ -255,11 +284,11 @@ const styles = StyleSheet.create({
   cardBody: {
     flex: 1,
     padding: spacing.sm,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   cardTitle: {
     fontSize: fontSize.md,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.text,
     marginBottom: 4,
   },
@@ -268,15 +297,15 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   fab: {
-    position: 'absolute',
+    position: "absolute",
     bottom: spacing.xxl,
     right: spacing.lg,
     width: 64,
     height: 64,
     borderRadius: borderRadius.md,
     backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     elevation: shadow.elevation,
     shadowColor: shadow.color,
     shadowOffset: shadow.offset,
@@ -286,19 +315,19 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: colors.overlay,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContent: {
-    width: '85%',
+    width: "85%",
     backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.xl,
-    alignItems: 'center',
+    alignItems: "center",
   },
   modalTitle: {
     fontSize: fontSize.lg,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
     marginBottom: spacing.sm,
   },
@@ -308,7 +337,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   urlInput: {
-    width: '100%',
+    width: "100%",
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: borderRadius.sm,
@@ -319,7 +348,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   modalButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.sm,
   },
   cancelButton: {
@@ -332,7 +361,7 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     color: colors.textMuted,
     fontSize: fontSize.md,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   submitButton: {
     backgroundColor: colors.primary,
@@ -346,12 +375,12 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: colors.surface,
     fontSize: fontSize.md,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   errorText: {
     color: colors.error,
     fontSize: fontSize.md,
     marginBottom: spacing.sm,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

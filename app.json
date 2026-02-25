@@ -24,6 +24,9 @@
     },
     "web": {
       "favicon": "./assets/wowCooking.png"
-    }
+    },
+    "plugins": [
+      "expo-font"
+    ]
   }
 }
