@@ -4,7 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Home from './screens/Home';
 import RecipeDetail from './screens/RecipeDetail';
-import { loadRecipes, saveRecipe, updateRecipe } from './services/recipeStorage';
+import { loadRecipes, saveRecipe, updateRecipe, deleteRecipe } from './services/recipeStorage';
 
 const Stack = createNativeStackNavigator();
 
@@ -18,6 +18,12 @@ export default function App() {
   const handleUpdateRecipe = async (updated) => {
     await updateRecipe(updated);
     setRecipes((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+  };
+
+  const handleDeleteRecipe = async (id, navigation) => {
+    await deleteRecipe(id);
+    setRecipes((prev) => prev.filter((r) => r.id !== id));
+    navigation.goBack();
   };
 
   const handleSaveRecipe = async (recipe) => {
@@ -39,7 +45,13 @@ export default function App() {
           )}
         </Stack.Screen>
         <Stack.Screen name="RecipeDetail">
-          {(props) => <RecipeDetail {...props} onRecipeUpdated={handleUpdateRecipe} />}
+          {(props) => (
+            <RecipeDetail
+              {...props}
+              onRecipeUpdated={handleUpdateRecipe}
+              onRecipeDeleted={handleDeleteRecipe}
+            />
+          )}
         </Stack.Screen>
       </Stack.Navigator>
       <StatusBar style="auto" />

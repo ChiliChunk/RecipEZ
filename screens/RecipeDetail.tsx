@@ -9,6 +9,8 @@ import {
   Linking,
   TextInput,
   ActivityIndicator,
+  Modal,
+  Pressable,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Feather } from '@expo/vector-icons';
@@ -18,6 +20,7 @@ import type { StoredRecipe } from '../types/recipe';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'RecipeDetail'> & {
   onRecipeUpdated: (recipe: StoredRecipe) => Promise<void>;
+  onRecipeDeleted: (id: string, navigation: Props['navigation']) => Promise<void>;
 };
 
 function formatDuration(iso: string | null): string | null {
@@ -32,7 +35,7 @@ function formatDuration(iso: string | null): string | null {
   return null;
 }
 
-export default function RecipeDetail({ navigation, route, onRecipeUpdated }: Props) {
+export default function RecipeDetail({ navigation, route, onRecipeUpdated, onRecipeDeleted }: Props) {
   const { recipe } = route.params;
 
   const [isEditing, setIsEditing] = useState(false);
@@ -41,6 +44,7 @@ export default function RecipeDetail({ navigation, route, onRecipeUpdated }: Pro
   const [editIngredients, setEditIngredients] = useState<string[]>([]);
   const [editInstructions, setEditInstructions] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
   const handleEditPress = () => {
     setEditTitle(recipe.title);
@@ -247,10 +251,52 @@ export default function RecipeDetail({ navigation, route, onRecipeUpdated }: Pro
             : <Feather name="check" size={24} color={colors.surface} />}
         </TouchableOpacity>
       ) : (
-        <TouchableOpacity style={styles.fab} onPress={handleEditPress}>
-          <Feather name="edit" size={24} color={colors.surface} />
-        </TouchableOpacity>
+        <>
+          <TouchableOpacity style={styles.fabSmall} onPress={() => setDeleteModalVisible(true)}>
+            <Feather name="trash-2" size={18} color={colors.surface} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.fab} onPress={handleEditPress}>
+            <Feather name="edit" size={24} color={colors.surface} />
+          </TouchableOpacity>
+        </>
       )}
+
+      <Modal
+        animationType="fade"
+        transparent
+        visible={deleteModalVisible}
+        onRequestClose={() => setDeleteModalVisible(false)}
+        statusBarTranslucent
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setDeleteModalVisible(false)}
+        >
+          <Pressable style={styles.modalContent} onPress={() => {}}>
+            <Text style={styles.modalTitle}>Supprimer la recette</Text>
+            <Text style={styles.modalBody}>
+              Voulez-vous vraiment supprimer cette recette ?
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setDeleteModalVisible(false)}
+              >
+                <Text style={styles.cancelButtonText}>Annuler</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.deleteConfirmButton}
+                onPress={() => {
+                  setDeleteModalVisible(false);
+                  onRecipeDeleted(recipe.id, navigation);
+                }}
+              >
+                <Text style={styles.deleteConfirmButtonText}>Supprimer</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -373,6 +419,22 @@ const styles = StyleSheet.create({
     color: colors.primary,
     textDecorationLine: 'underline',
   },
+  fabSmall: {
+    position: 'absolute',
+    bottom: spacing.xxl + 64 + spacing.sm,
+    right: spacing.lg + 10,
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.sm,
+    backgroundColor: colors.error,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: shadow.elevation,
+    shadowColor: shadow.color,
+    shadowOffset: shadow.offset,
+    shadowOpacity: shadow.opacity,
+    shadowRadius: shadow.radius,
+  },
   fab: {
     position: 'absolute',
     bottom: spacing.xxl,
@@ -443,5 +505,56 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.surface,
     fontWeight: 'bold',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: colors.overlay,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '85%',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    padding: spacing.xl,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: spacing.sm,
+  },
+  modalBody: {
+    fontSize: fontSize.md,
+    color: colors.textMuted,
+    marginBottom: spacing.lg,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  cancelButton: {
+    paddingVertical: 10,
+    paddingHorizontal: spacing.lg,
+    borderRadius: borderRadius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  cancelButtonText: {
+    color: colors.textMuted,
+    fontSize: fontSize.md,
+    fontWeight: '600',
+  },
+  deleteConfirmButton: {
+    backgroundColor: colors.error,
+    paddingVertical: 10,
+    paddingHorizontal: spacing.lg,
+    borderRadius: borderRadius.sm,
+  },
+  deleteConfirmButtonText: {
+    color: colors.surface,
+    fontSize: fontSize.md,
+    fontWeight: '600',
   },
 });
