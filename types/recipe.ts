@@ -13,4 +13,5 @@ export interface Recipe {
 export interface StoredRecipe extends Recipe {
   id: string;
   savedAt: number;
+  sortOrder: number;
 }

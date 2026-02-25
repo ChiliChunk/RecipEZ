@@ -8,6 +8,7 @@ type RecipesContextType = {
   saveRecipe: (recipe: Recipe) => Promise<StoredRecipe>;
   updateRecipe: (updated: StoredRecipe) => Promise<void>;
   deleteRecipe: (id: string) => Promise<void>;
+  reorderRecipes: (recipes: StoredRecipe[]) => Promise<void>;
 };
 
 const RecipesContext = createContext<RecipesContextType | null>(null);
@@ -21,7 +22,7 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
 
   const saveRecipe = async (recipe: Recipe): Promise<StoredRecipe> => {
     const stored = await storage.saveRecipe(recipe);
-    setRecipes((prev) => [stored, ...prev.filter((r) => r.sourceUrl !== stored.sourceUrl)]);
+    setRecipes((prev) => [stored, ...prev.filter((r) => r.sourceUrl !== stored.sourceUrl).map((r) => ({ ...r, sortOrder: r.sortOrder + 1 }))]);
     return stored;
   };
 
@@ -32,11 +33,17 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
 
   const deleteRecipe = async (id: string): Promise<void> => {
     await storage.deleteRecipe(id);
-    setRecipes((prev) => prev.filter((r) => r.id !== id));
+    setRecipes((prev) => prev.filter((r) => r.id !== id).map((r, i) => ({ ...r, sortOrder: i })));
+  };
+
+  const reorderRecipes = async (reordered: StoredRecipe[]): Promise<void> => {
+    const withOrder = reordered.map((r, i) => ({ ...r, sortOrder: i }));
+    setRecipes(withOrder);
+    await storage.reorderRecipes(reordered);
   };
 
   return (
-    <RecipesContext.Provider value={{ recipes, saveRecipe, updateRecipe, deleteRecipe }}>
+    <RecipesContext.Provider value={{ recipes, saveRecipe, updateRecipe, deleteRecipe, reorderRecipes }}>
       {children}
     </RecipesContext.Provider>
   );

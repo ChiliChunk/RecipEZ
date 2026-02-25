@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,9 +8,12 @@ import {
   Pressable,
   TextInput,
   ActivityIndicator,
-  FlatList,
   Image,
 } from 'react-native';
+import DraggableFlatList, {
+  ScaleDecorator,
+  type RenderItemParams,
+} from 'react-native-draggable-flatlist';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius, fontSize, shadow } from '../styles/theme';
@@ -21,28 +24,47 @@ import type { RootStackParamList } from '../types/navigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
-function RecipeCard({ recipe, onPress }: { recipe: StoredRecipe; onPress: () => void }) {
+function RecipeCard({
+  recipe,
+  onPress,
+  drag,
+  isActive,
+}: {
+  recipe: StoredRecipe;
+  onPress: () => void;
+  drag: () => void;
+  isActive: boolean;
+}) {
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.75}>
-      {recipe.imageUrl ? (
-        <Image source={{ uri: recipe.imageUrl }} style={styles.cardImage} />
-      ) : (
-        <View style={[styles.cardImage, styles.cardImagePlaceholder]}>
-          <Text style={styles.cardImagePlaceholderText}>🍽</Text>
-        </View>
-      )}
-      <View style={styles.cardBody}>
-        <Text style={styles.cardTitle} numberOfLines={2}>{recipe.title}</Text>
-        {recipe.servings && (
-          <Text style={styles.cardServings}>{recipe.servings}</Text>
+    <ScaleDecorator>
+      <TouchableOpacity
+        style={[styles.card, isActive && styles.cardActive]}
+        onPress={onPress}
+        onLongPress={drag}
+        delayLongPress={150}
+        activeOpacity={0.75}
+        disabled={isActive}
+      >
+        {recipe.imageUrl ? (
+          <Image source={{ uri: recipe.imageUrl }} style={styles.cardImage} />
+        ) : (
+          <View style={[styles.cardImage, styles.cardImagePlaceholder]}>
+            <Text style={styles.cardImagePlaceholderText}>🍽</Text>
+          </View>
         )}
-      </View>
-    </TouchableOpacity>
+        <View style={styles.cardBody}>
+          <Text style={styles.cardTitle} numberOfLines={2}>{recipe.title}</Text>
+          {recipe.servings && (
+            <Text style={styles.cardServings}>{recipe.servings}</Text>
+          )}
+        </View>
+      </TouchableOpacity>
+    </ScaleDecorator>
   );
 }
 
 export default function Home({ navigation }: Props) {
-  const { recipes, saveRecipe } = useRecipes();
+  const { recipes, saveRecipe, reorderRecipes } = useRecipes();
   const [modalVisible, setModalVisible] = useState(false);
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
@@ -68,6 +90,25 @@ export default function Home({ navigation }: Props) {
     }
   };
 
+  const renderItem = useCallback(
+    ({ item, drag, isActive }: RenderItemParams<StoredRecipe>) => (
+      <RecipeCard
+        recipe={item}
+        onPress={() => navigation.navigate('RecipeDetail', { recipe: item })}
+        drag={drag}
+        isActive={isActive}
+      />
+    ),
+    [navigation],
+  );
+
+  const handleDragEnd = useCallback(
+    ({ data }: { data: StoredRecipe[] }) => {
+      reorderRecipes(data);
+    },
+    [reorderRecipes],
+  );
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Mon livre de recettes</Text>
@@ -79,13 +120,12 @@ export default function Home({ navigation }: Props) {
           </Text>
         </View>
       ) : (
-        <FlatList
+        <DraggableFlatList
           data={recipes}
           keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          onDragEnd={handleDragEnd}
           contentContainerStyle={styles.list}
-          renderItem={({ item }) => (
-            <RecipeCard recipe={item} onPress={() => navigation.navigate('RecipeDetail', { recipe: item })} />
-          )}
         />
       )}
 
@@ -194,6 +234,11 @@ const styles = StyleSheet.create({
     shadowOffset: shadow.offset,
     shadowOpacity: shadow.opacity,
     shadowRadius: shadow.radius,
+  },
+  cardActive: {
+    opacity: 0.9,
+    elevation: shadow.elevation + 4,
+    shadowOpacity: shadow.opacity + 0.1,
   },
   cardImage: {
     width: 90,
