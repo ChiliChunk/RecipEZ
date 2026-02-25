@@ -99,13 +99,9 @@ function extractTitle(html: string): string | null {
 }
 
 function extractImage(html: string): string | null {
-  // The tag spans multiple lines: data-src comes BEFORE id="recipe-picture-print"
-  // Match the entire <img ...> tag that contains id="recipe-picture-print"
-  const imgTag = /<img[\s\S]*?id="recipe-picture-print"[\s\S]*?\/>/i.exec(html);
-  if (imgTag) {
-    return extractAttr(imgTag[0], 'data-src');
-  }
-  return null;
+  // data-src appears a few lines BEFORE id="recipe-picture-print" in the same <img> tag
+  const match = /data-src="([^"]+)"[\s\S]{0,300}?id="recipe-picture-print"/i.exec(html);
+  return match ? match[1] : null;
 }
 
 function extractServings(html: string): string | null {
