@@ -147,7 +147,7 @@ export default function Home({ navigation, recipes, onRecipeImported }: Props) {
         style={styles.fab}
         onPress={() => setModalVisible(true)}
       >
-        <Text style={styles.fabIcon}>✎</Text>
+        <Text style={styles.fabIcon}>+</Text>
       </TouchableOpacity>
     </View>
   );
@@ -238,8 +238,9 @@ const styles = StyleSheet.create({
     shadowRadius: shadow.radius,
   },
   fabIcon: {
-    fontSize: fontSize.xl,
+    fontSize: 36,
     color: colors.surface,
+    lineHeight: 40,
   },
   modalOverlay: {
     flex: 1,
