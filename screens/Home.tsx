@@ -12,6 +12,7 @@ import {
   Image,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius, fontSize, shadow } from '../styles/theme';
 import { scrapeRecipe, ScraperError } from '../services/recipeScraper';
 import type { Recipe, StoredRecipe } from '../types/recipe';
@@ -147,7 +148,7 @@ export default function Home({ navigation, recipes, onRecipeImported }: Props) {
         style={styles.fab}
         onPress={() => setModalVisible(true)}
       >
-        <Text style={styles.fabIcon}>+</Text>
+        <Ionicons name="add" size={32} color={colors.surface} />
       </TouchableOpacity>
     </View>
   );
@@ -236,11 +237,6 @@ const styles = StyleSheet.create({
     shadowOffset: shadow.offset,
     shadowOpacity: shadow.opacity,
     shadowRadius: shadow.radius,
-  },
-  fabIcon: {
-    fontSize: 36,
-    color: colors.surface,
-    lineHeight: 40,
   },
   modalOverlay: {
     flex: 1,

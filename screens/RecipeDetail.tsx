@@ -8,7 +8,8 @@ import {
   Linking,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { colors, spacing, borderRadius, fontSize } from '../styles/theme';
+import { Feather } from '@expo/vector-icons';
+import { colors, spacing, borderRadius, fontSize, shadow } from '../styles/theme';
 import type { RootStackParamList } from '../types/navigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'RecipeDetail'>;
@@ -106,6 +107,10 @@ export default function RecipeDetail({ navigation, route }: Props) {
           <Text style={styles.sourceLinkText}>Voir la recette originale</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <TouchableOpacity style={styles.fab}>
+        <Feather name="edit" size={24} color={colors.surface} />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -226,5 +231,21 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.primary,
     textDecorationLine: 'underline',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: spacing.xxl,
+    right: spacing.lg,
+    width: 64,
+    height: 64,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: shadow.elevation,
+    shadowColor: shadow.color,
+    shadowOffset: shadow.offset,
+    shadowOpacity: shadow.opacity,
+    shadowRadius: shadow.radius,
   },
 });
