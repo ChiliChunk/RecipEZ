@@ -27,16 +27,15 @@ async function fetchHtml(url: string): Promise<string> {
     const response = await fetch(url, {
       signal: controller.signal,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; RecipEZ/1.0)',
-        Accept: 'text/html',
+        'User-Agent':
+          'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+        Accept: 'text/html,application/xhtml+xml',
+        'Accept-Language': 'fr-FR,fr;q=0.9',
       },
     });
 
     if (!response.ok) {
-      throw new ScraperError(
-        `Erreur HTTP ${response.status}`,
-        'NETWORK_ERROR',
-      );
+      throw new ScraperError(`Erreur HTTP ${response.status}`, 'NETWORK_ERROR');
     }
 
     return response.text();
@@ -45,152 +44,162 @@ async function fetchHtml(url: string): Promise<string> {
   }
 }
 
-// --- JSON-LD extraction ---
+// --- HTML helpers ---
 
-function extractJsonLdBlocks(html: string): unknown[] {
-  const regex = /<script\s+type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
-  const blocks: unknown[] = [];
-  let match: RegExpExecArray | null;
-
-  while ((match = regex.exec(html)) !== null) {
-    try {
-      blocks.push(JSON.parse(match[1]));
-    } catch {
-      // skip malformed JSON-LD
-    }
-  }
-
-  return blocks;
-}
-
-function findRecipeObject(obj: unknown): Record<string, unknown> | null {
-  if (!obj || typeof obj !== 'object') return null;
-
-  if (Array.isArray(obj)) {
-    for (const item of obj) {
-      const found = findRecipeObject(item);
-      if (found) return found;
-    }
-    return null;
-  }
-
-  const record = obj as Record<string, unknown>;
-
-  if (record['@type'] === 'Recipe') return record;
-  if (Array.isArray(record['@type']) && record['@type'].includes('Recipe')) return record;
-
-  if (Array.isArray(record['@graph'])) {
-    return findRecipeObject(record['@graph']);
-  }
-
-  return null;
-}
-
-// --- Normalization helpers ---
-
-function normalizeString(value: unknown): string | null {
-  if (typeof value === 'string') return value.trim() || null;
-  if (typeof value === 'number') return String(value);
-  if (Array.isArray(value)) return normalizeString(value[0]);
-  return null;
-}
-
-function normalizeImage(value: unknown): string | null {
-  if (typeof value === 'string') return value;
-  if (Array.isArray(value)) return normalizeImage(value[0]);
-  if (value && typeof value === 'object') {
-    const obj = value as Record<string, unknown>;
-    if (typeof obj.url === 'string') return obj.url;
-  }
-  return null;
-}
-
-function normalizeStringArray(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return value
-      .map((item) => (typeof item === 'string' ? item.trim() : null))
-      .filter((item): item is string => item !== null && item !== '');
-  }
-  if (typeof value === 'string') {
-    return value.split('\n').map((s) => s.trim()).filter(Boolean);
-  }
-  return [];
-}
-
-function normalizeInstructions(value: unknown): string[] {
-  if (typeof value === 'string') {
-    return value.split(/\n+/).map((s) => s.trim()).filter(Boolean);
-  }
-  if (!Array.isArray(value)) return [];
-
-  const steps: string[] = [];
-  for (const item of value) {
-    if (typeof item === 'string') {
-      steps.push(item.trim());
-    } else if (item && typeof item === 'object') {
-      const obj = item as Record<string, unknown>;
-      if (obj['@type'] === 'HowToStep' && typeof obj.text === 'string') {
-        steps.push(obj.text.trim());
-      } else if (obj['@type'] === 'HowToSection' && Array.isArray(obj.itemListElement)) {
-        steps.push(...normalizeInstructions(obj.itemListElement));
-      }
-    }
-  }
-  return steps.filter(Boolean);
-}
-
-function normalizeRecipe(raw: Record<string, unknown>, sourceUrl: string): Recipe {
-  return {
-    title: normalizeString(raw.name) ?? 'Sans titre',
-    imageUrl: normalizeImage(raw.image),
-    ingredients: normalizeStringArray(raw.recipeIngredient),
-    instructions: normalizeInstructions(raw.recipeInstructions),
-    prepTime: normalizeString(raw.prepTime),
-    cookTime: normalizeString(raw.cookTime),
-    totalTime: normalizeString(raw.totalTime),
-    servings: normalizeString(raw.recipeYield),
-    sourceUrl,
-  };
-}
-
-// --- Meta tags fallback ---
-
-function escapeRegex(str: string): string {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function extractMetaContent(html: string, property: string): string | null {
-  const escaped = escapeRegex(property);
-  const regex = new RegExp(
-    `<meta\\s+(?:[^>]*?(?:property|name)\\s*=\\s*["']${escaped}["'][^>]*?content\\s*=\\s*["']([^"']*?)["']|[^>]*?content\\s*=\\s*["']([^"']*?)["'][^>]*?(?:property|name)\\s*=\\s*["']${escaped}["'])`,
-    'i',
-  );
-  const match = regex.exec(html);
-  return match ? (match[1] ?? match[2])?.trim() || null : null;
-}
-
-function extractHtmlTitle(html: string): string | null {
-  const match = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html);
+// Extract a data attribute value from a tag string (handles multiline tags)
+function extractAttr(tag: string, attr: string): string | null {
+  const regex = new RegExp(`${attr}\\s*=\\s*"([^"]*)"`, 'i');
+  const match = regex.exec(tag);
   return match ? match[1].trim() || null : null;
 }
 
-function extractFromMetaTags(html: string, sourceUrl: string): Recipe | null {
-  const title =
-    extractMetaContent(html, 'og:title') ?? extractHtmlTitle(html);
+// Strip all HTML tags and decode common entities, collapse whitespace
+function extractText(html: string): string {
+  return html
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
-  if (!title) return null;
+// Split HTML into repeated blocks matched by a regex ([\s\S]*? between two anchors)
+function splitBlocks(html: string, startPattern: RegExp): string[] {
+  const results: string[] = [];
+  const anchors: number[] = [];
 
-  return {
-    title,
-    imageUrl: extractMetaContent(html, 'og:image'),
-    ingredients: [],
-    instructions: [],
-    prepTime: null,
-    cookTime: null,
-    totalTime: null,
-    servings: null,
-    sourceUrl,
-  };
+  let match: RegExpExecArray | null;
+  const g = new RegExp(startPattern.source, 'gi');
+  while ((match = g.exec(html)) !== null) {
+    anchors.push(match.index);
+  }
+
+  for (let i = 0; i < anchors.length; i++) {
+    const start = anchors[i];
+    const end = anchors[i + 1] ?? html.length;
+    results.push(html.slice(start, end));
+  }
+
+  return results;
+}
+
+// --- Marmiton parsers ---
+
+function extractTitle(html: string): string | null {
+  const block = /<div[^>]+class="[^"]*main-title[^"]*"[^>]*>([\s\S]*?)<\/div>/i.exec(html);
+  if (block) {
+    const h1 = /<h1[^>]*>([\s\S]*?)<\/h1>/i.exec(block[1]);
+    if (h1) return extractText(h1[1]);
+  }
+  const h1 = /<h1[^>]*>([\s\S]*?)<\/h1>/i.exec(html);
+  return h1 ? extractText(h1[1]) : null;
+}
+
+function extractImage(html: string): string | null {
+  // The tag spans multiple lines: data-src comes BEFORE id="recipe-picture-print"
+  // Match the entire <img ...> tag that contains id="recipe-picture-print"
+  const imgTag = /<img[\s\S]*?id="recipe-picture-print"[\s\S]*?\/>/i.exec(html);
+  if (imgTag) {
+    return extractAttr(imgTag[0], 'data-src');
+  }
+  return null;
+}
+
+function extractServings(html: string): string | null {
+  // <div\n    class="mrtn-recette_ingredients-counter"\n    data-servingsNb="15"\n    data-servingsUnit="crêpes"\n>
+  const tag = /<div[\s\S]*?class="mrtn-recette_ingredients-counter"[\s\S]*?>/i.exec(html);
+  if (tag) {
+    const nb = extractAttr(tag[0], 'data-servingsNb');
+    const unit = extractAttr(tag[0], 'data-servingsUnit');
+    if (nb) return unit ? `${nb} ${unit}` : nb;
+  }
+  return null;
+}
+
+function extractIngredients(html: string): string[] {
+  // Isolate the ingredients items block
+  const blockStart = html.indexOf('class="mrtn-recette_ingredients-items"');
+  if (blockStart === -1) return [];
+  const blockHtml = html.slice(blockStart);
+
+  // Split on each card-ingredient opening tag
+  const cards = splitBlocks(blockHtml, /<div[\s\S]*?class="card-ingredient"/);
+  // First "block" is the container itself (before any card), skip it
+  const ingredients: string[] = [];
+
+  for (const card of cards.slice(1)) {
+    // Quantity: use data-ingredientQuantity attribute (avoids multiline span content)
+    const qtyTag = /class="card-ingredient-quantity"[\s\S]*?data-ingredientQuantity="([^"]+)"/i.exec(card);
+    const qty = qtyTag ? qtyTag[1].trim() : '';
+
+    // Unit: use data-unitSingular attribute
+    const unitTag = /data-unitSingular="([^"]*)"/i.exec(card);
+    const unit = unitTag ? unitTag[1].trim() : '';
+
+    // Name: use data-ingredientNameSingular attribute
+    const nameTag = /data-ingredientNameSingular="([^"]+)"/i.exec(card);
+    const name = nameTag ? nameTag[1].trim() : '';
+
+    // Complement: use data-ingredientComplementSingular attribute
+    const compTag = /data-ingredientComplementSingular="([^"]*)"/i.exec(card);
+    const complement = compTag ? compTag[1].trim() : '';
+
+    if (!name) continue;
+
+    const parts: string[] = [];
+    if (qty) parts.push(qty);
+    if (unit) parts.push(unit);
+    if (qty || unit) parts.push('de');
+    parts.push(name);
+    if (complement) parts.push(complement);
+
+    ingredients.push(parts.join(' '));
+  }
+
+  return ingredients;
+}
+
+function extractInstructions(html: string): string[] {
+  const blocks = splitBlocks(html, /<div[^>]+class="recipe-step-list__container"/);
+  // First block is content before the first step, skip it
+  return blocks
+    .slice(1)
+    .map((block) => {
+      const pMatch = /<p[^>]*>([\s\S]*?)<\/p>/i.exec(block);
+      return pMatch ? extractText(pMatch[1]) : '';
+    })
+    .filter(Boolean);
+}
+
+function extractTime(html: string, label: string): string | null {
+  // Pattern (with possible &nbsp; or whitespace after colon):
+  // <span>Préparation :</span>\n<div>10 min</div>
+  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(
+    `${escaped}[^<]*<\\/span>\\s*<div>([^<]+)<`,
+    'i',
+  );
+  const match = regex.exec(html);
+  if (match) {
+    const val = match[1].trim();
+    return val === '-' ? null : val;
+  }
+  return null;
+}
+
+function extractTotalTime(html: string): string | null {
+  const block = /<div[^>]+class="[^"]*time__total[^"]*"[^>]*>([\s\S]*?)<\/div>/i.exec(html);
+  if (block) {
+    const divMatch = /<div>([^<]+)<\/div>/i.exec(block[1]);
+    if (divMatch) {
+      const val = divMatch[1].trim();
+      return val === '-' ? null : val;
+    }
+  }
+  return null;
 }
 
 // --- Main export ---
@@ -211,22 +220,23 @@ export async function scrapeRecipe(url: string): Promise<Recipe> {
     );
   }
 
-  // Try JSON-LD first
-  const jsonLdBlocks = extractJsonLdBlocks(html);
-  const rawRecipe = findRecipeObject(jsonLdBlocks);
+  const title = extractTitle(html);
+  const ingredients = extractIngredients(html);
+  const instructions = extractInstructions(html);
 
-  if (rawRecipe) {
-    return normalizeRecipe(rawRecipe, url);
+  if (!title && ingredients.length === 0 && instructions.length === 0) {
+    throw new ScraperError('Aucune recette trouvée sur cette page', 'NO_RECIPE_FOUND');
   }
 
-  // Fallback to meta tags
-  const metaRecipe = extractFromMetaTags(html, url);
-  if (metaRecipe) {
-    return metaRecipe;
-  }
-
-  throw new ScraperError(
-    'Aucune recette trouvée sur cette page',
-    'NO_RECIPE_FOUND',
-  );
+  return {
+    title: title ?? 'Sans titre',
+    imageUrl: extractImage(html),
+    ingredients,
+    instructions,
+    prepTime: extractTime(html, 'Préparation'),
+    cookTime: extractTime(html, 'Cuisson'),
+    totalTime: extractTotalTime(html),
+    servings: extractServings(html),
+    sourceUrl: url,
+  };
 }
