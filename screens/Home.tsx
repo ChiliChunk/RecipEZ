@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   StyleSheet,
   Text,
@@ -76,20 +76,31 @@ function SeparatorCard({
   name,
   drag,
   isActive,
+  collapsed,
+  onToggle,
 }: {
   name: string;
   drag: () => void;
   isActive: boolean;
+  collapsed: boolean;
+  onToggle: () => void;
 }) {
   return (
     <ScaleDecorator>
       <TouchableOpacity
         style={[styles.separator, isActive && styles.separatorActive]}
+        onPress={onToggle}
         onLongPress={drag}
         delayLongPress={150}
         activeOpacity={0.75}
         disabled={isActive}
       >
+        <Ionicons
+          name={collapsed ? "chevron-forward" : "chevron-down"}
+          size={16}
+          color={colors.primary}
+          style={styles.separatorChevron}
+        />
         <Text style={styles.separatorText}>{name}</Text>
         <View style={styles.separatorLine} />
       </TouchableOpacity>
@@ -105,6 +116,46 @@ export default function Home({ navigation }: Props) {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
+
+  const toggleCollapsed = useCallback((id: string) => {
+    setCollapsedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  // Build a map of separator id -> hidden children for collapsed separators
+  const hiddenChildrenMap = useMemo(() => {
+    const map = new Map<string, ListItem[]>();
+    let currentSepId: string | null = null;
+    for (const item of items) {
+      if (isSeparator(item)) {
+        currentSepId = collapsedIds.has(item.id) ? item.id : null;
+      } else if (currentSepId) {
+        const children = map.get(currentSepId) || [];
+        children.push(item);
+        map.set(currentSepId, children);
+      }
+    }
+    return map;
+  }, [items, collapsedIds]);
+
+  const visibleItems = useMemo(() => {
+    const result: ListItem[] = [];
+    let hiding = false;
+    for (const item of items) {
+      if (isSeparator(item)) {
+        hiding = collapsedIds.has(item.id);
+        result.push(item);
+      } else if (!hiding) {
+        result.push(item);
+      }
+    }
+    return result;
+  }, [items, collapsedIds]);
 
   const handleImport = async () => {
     setError(null);
@@ -138,7 +189,13 @@ export default function Home({ navigation }: Props) {
     ({ item, drag, isActive }: RenderItemParams<ListItem>) => {
       if (isSeparator(item)) {
         return (
-          <SeparatorCard name={item.name} drag={drag} isActive={isActive} />
+          <SeparatorCard
+            name={item.name}
+            drag={drag}
+            isActive={isActive}
+            collapsed={collapsedIds.has(item.id)}
+            onToggle={() => toggleCollapsed(item.id)}
+          />
         );
       }
       return (
@@ -150,14 +207,23 @@ export default function Home({ navigation }: Props) {
         />
       );
     },
-    [navigation],
+    [navigation, collapsedIds, toggleCollapsed],
   );
 
   const handleDragEnd = useCallback(
     ({ data }: { data: ListItem[] }) => {
-      reorderItems(data);
+      // Reinsert hidden children after their collapsed separators
+      const full: ListItem[] = [];
+      for (const item of data) {
+        full.push(item);
+        if (isSeparator(item)) {
+          const hidden = hiddenChildrenMap.get(item.id);
+          if (hidden) full.push(...hidden);
+        }
+      }
+      reorderItems(full);
     },
-    [reorderItems],
+    [reorderItems, hiddenChildrenMap],
   );
 
   return (
@@ -182,7 +248,7 @@ export default function Home({ navigation }: Props) {
         </View>
       ) : (
         <DraggableFlatList
-          data={items}
+          data={visibleItems}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           onDragEnd={handleDragEnd}
@@ -355,6 +421,9 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 1,
     backgroundColor: colors.primaryLight,
+  },
+  separatorChevron: {
+    marginRight: 2,
   },
   separatorText: {
     fontSize: fontSize.sm,
