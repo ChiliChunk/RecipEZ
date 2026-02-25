@@ -25,7 +25,8 @@ import {
 } from "../styles/theme";
 import { scrapeRecipe, ScraperError } from "../services/recipeScraper";
 import { useRecipes } from "../contexts/RecipesContext";
-import type { StoredRecipe } from "../types/recipe";
+import type { StoredRecipe, ListItem } from "../types/recipe";
+import { isSeparator } from "../types/recipe";
 import type { RootStackParamList } from "../types/navigation";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
@@ -71,9 +72,36 @@ function RecipeCard({
   );
 }
 
+function SeparatorCard({
+  name,
+  drag,
+  isActive,
+}: {
+  name: string;
+  drag: () => void;
+  isActive: boolean;
+}) {
+  return (
+    <ScaleDecorator>
+      <TouchableOpacity
+        style={[styles.separator, isActive && styles.separatorActive]}
+        onLongPress={drag}
+        delayLongPress={150}
+        activeOpacity={0.75}
+        disabled={isActive}
+      >
+        <Text style={styles.separatorText}>{name}</Text>
+        <View style={styles.separatorLine} />
+      </TouchableOpacity>
+    </ScaleDecorator>
+  );
+}
+
 export default function Home({ navigation }: Props) {
-  const { recipes, saveRecipe, reorderRecipes } = useRecipes();
+  const { items, saveRecipe, reorderItems, addSeparator } = useRecipes();
   const [modalVisible, setModalVisible] = useState(false);
+  const [separatorModalVisible, setSeparatorModalVisible] = useState(false);
+  const [separatorName, setSeparatorName] = useState("");
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -98,23 +126,38 @@ export default function Home({ navigation }: Props) {
     }
   };
 
+  const handleAddSeparator = async () => {
+    const name = separatorName.trim();
+    if (!name) return;
+    await addSeparator(name);
+    setSeparatorName("");
+    setSeparatorModalVisible(false);
+  };
+
   const renderItem = useCallback(
-    ({ item, drag, isActive }: RenderItemParams<StoredRecipe>) => (
-      <RecipeCard
-        recipe={item}
-        onPress={() => navigation.navigate("RecipeDetail", { recipe: item })}
-        drag={drag}
-        isActive={isActive}
-      />
-    ),
+    ({ item, drag, isActive }: RenderItemParams<ListItem>) => {
+      if (isSeparator(item)) {
+        return (
+          <SeparatorCard name={item.name} drag={drag} isActive={isActive} />
+        );
+      }
+      return (
+        <RecipeCard
+          recipe={item}
+          onPress={() => navigation.navigate("RecipeDetail", { recipe: item })}
+          drag={drag}
+          isActive={isActive}
+        />
+      );
+    },
     [navigation],
   );
 
   const handleDragEnd = useCallback(
-    ({ data }: { data: StoredRecipe[] }) => {
-      reorderRecipes(data);
+    ({ data }: { data: ListItem[] }) => {
+      reorderItems(data);
     },
-    [reorderRecipes],
+    [reorderItems],
   );
 
   return (
@@ -122,7 +165,7 @@ export default function Home({ navigation }: Props) {
       <View style={styles.header}>
         <View style={styles.headerSpacer} />
         <Text style={styles.title}>RecipEZ</Text>
-        <TouchableOpacity onPress={() => setModalVisible(true)} hitSlop={8}>
+        <TouchableOpacity onPress={() => setSeparatorModalVisible(true)} hitSlop={8}>
           <MaterialCommunityIcons
             name="bookmark-plus"
             size={24}
@@ -131,7 +174,7 @@ export default function Home({ navigation }: Props) {
         </TouchableOpacity>
       </View>
 
-      {recipes.length === 0 ? (
+      {items.length === 0 ? (
         <View style={styles.emptyState}>
           <Text style={styles.emptyStateText}>
             Aucune recette enregistrée.{"\n"}Importez votre première recette !
@@ -139,7 +182,7 @@ export default function Home({ navigation }: Props) {
         </View>
       ) : (
         <DraggableFlatList
-          data={recipes}
+          data={items}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           onDragEnd={handleDragEnd}
@@ -205,6 +248,52 @@ export default function Home({ navigation }: Props) {
         </Pressable>
       </Modal>
 
+      <Modal
+        animationType="fade"
+        transparent
+        visible={separatorModalVisible}
+        onRequestClose={() => setSeparatorModalVisible(false)}
+        statusBarTranslucent
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setSeparatorModalVisible(false)}
+        >
+          <Pressable style={styles.modalContent} onPress={() => {}}>
+            <Text style={styles.modalTitle}>Nouveau séparateur</Text>
+            <TextInput
+              style={styles.urlInput}
+              placeholder="Nom du séparateur"
+              placeholderTextColor={colors.textMuted}
+              value={separatorName}
+              onChangeText={setSeparatorName}
+              autoFocus
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => {
+                  setSeparatorName("");
+                  setSeparatorModalVisible(false);
+                }}
+              >
+                <Text style={styles.cancelButtonText}>Annuler</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.submitButton,
+                  !separatorName.trim() && styles.submitButtonDisabled,
+                ]}
+                disabled={!separatorName.trim()}
+                onPress={handleAddSeparator}
+              >
+                <Text style={styles.submitButtonText}>Ajouter</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
       <TouchableOpacity
         style={styles.fab}
         onPress={() => setModalVisible(true)}
@@ -251,6 +340,29 @@ const styles = StyleSheet.create({
   list: {
     paddingHorizontal: spacing.md,
     paddingBottom: 100,
+  },
+  separator: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  separatorActive: {
+    opacity: 0.8,
+  },
+  separatorLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.primaryLight,
+  },
+  separatorText: {
+    fontSize: fontSize.sm,
+    fontWeight: "600",
+    color: colors.primary,
+    paddingHorizontal: spacing.xs,
+    textTransform: "uppercase",
+    letterSpacing: 1,
   },
   card: {
     flexDirection: "row",

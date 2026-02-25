@@ -15,3 +15,16 @@ export interface StoredRecipe extends Recipe {
   savedAt: number;
   sortOrder: number;
 }
+
+export interface Separator {
+  id: string;
+  type: 'separator';
+  name: string;
+  sortOrder: number;
+}
+
+export type ListItem = StoredRecipe | Separator;
+
+export function isSeparator(item: ListItem): item is Separator {
+  return 'type' in item && item.type === 'separator';
+}

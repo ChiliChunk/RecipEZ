@@ -34,7 +34,7 @@ function formatDuration(iso: string | null): string | null {
 }
 
 export default function RecipeDetail({ navigation, route }: Props) {
-  const { updateRecipe, deleteRecipe } = useRecipes();
+  const { updateRecipe, deleteItem } = useRecipes();
   const { recipe } = route.params;
 
   const [isEditing, setIsEditing] = useState(false);
@@ -287,7 +287,7 @@ export default function RecipeDetail({ navigation, route }: Props) {
                 style={styles.deleteConfirmButton}
                 onPress={() => {
                   setDeleteModalVisible(false);
-                  deleteRecipe(recipe.id);
+                  deleteItem(recipe.id);
                   navigation.goBack();
                 }}
               >
