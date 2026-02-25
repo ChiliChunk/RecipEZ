@@ -36,6 +36,18 @@ import type { RootStackParamList } from "../types/navigation";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 
+function formatDuration(iso: string | null): string | null {
+  if (!iso) return null;
+  const match = iso.match(/^PT(?:(\d+)H)?(?:(\d+)M)?$/);
+  if (!match) return iso;
+  const hours = match[1] ? parseInt(match[1], 10) : 0;
+  const minutes = match[2] ? parseInt(match[2], 10) : 0;
+  if (hours && minutes) return `${hours}h${String(minutes).padStart(2, "0")}`;
+  if (hours) return `${hours}h`;
+  if (minutes) return `${minutes} min`;
+  return null;
+}
+
 function RecipeCard({
   recipe,
   onPress,
@@ -47,6 +59,9 @@ function RecipeCard({
   drag: () => void;
   isActive: boolean;
 }) {
+  const prepTime = formatDuration(recipe.prepTime);
+  const cookTime = formatDuration(recipe.cookTime);
+
   return (
     <ScaleDecorator>
       <TouchableOpacity
@@ -68,8 +83,31 @@ function RecipeCard({
           <Text style={styles.cardTitle} numberOfLines={2}>
             {recipe.title}
           </Text>
-          {recipe.servings && (
-            <Text style={styles.cardServings}>{recipe.servings}</Text>
+          {(prepTime || cookTime) && (
+            <View style={styles.cardTimeRow}>
+              {prepTime && (
+                <View style={styles.cardTimeItem}>
+                  <MaterialCommunityIcons
+                    name="chef-hat"
+                    size={14}
+                    color={colors.primary}
+                    style={styles.cardTimeIcon}
+                  />
+                  <Text style={styles.cardServings}>{prepTime}</Text>
+                </View>
+              )}
+              {cookTime && (
+                <View style={styles.cardTimeItem}>
+                  <MaterialCommunityIcons
+                    name="stove"
+                    size={14}
+                    color={colors.primary}
+                    style={styles.cardTimeIcon}
+                  />
+                  <Text style={styles.cardServings}>{cookTime}</Text>
+                </View>
+              )}
+            </View>
           )}
         </View>
       </TouchableOpacity>
@@ -522,6 +560,18 @@ const styles = StyleSheet.create({
   cardServings: {
     fontSize: fontSize.sm,
     color: colors.textMuted,
+  },
+  cardTimeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  cardTimeItem: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  cardTimeIcon: {
+    marginRight: 4,
   },
   fab: {
     position: "absolute",
