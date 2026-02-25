@@ -15,13 +15,11 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius, fontSize, shadow } from '../styles/theme';
 import { scrapeRecipe, ScraperError } from '../services/recipeScraper';
-import type { Recipe, StoredRecipe } from '../types/recipe';
+import { useRecipes } from '../contexts/RecipesContext';
+import type { StoredRecipe } from '../types/recipe';
 import type { RootStackParamList } from '../types/navigation';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Home'> & {
-  recipes: StoredRecipe[];
-  onRecipeImported: (recipe: Recipe) => Promise<StoredRecipe>;
-};
+type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 function RecipeCard({ recipe, onPress }: { recipe: StoredRecipe; onPress: () => void }) {
   return (
@@ -43,7 +41,8 @@ function RecipeCard({ recipe, onPress }: { recipe: StoredRecipe; onPress: () => 
   );
 }
 
-export default function Home({ navigation, recipes, onRecipeImported }: Props) {
+export default function Home({ navigation }: Props) {
+  const { recipes, saveRecipe } = useRecipes();
   const [modalVisible, setModalVisible] = useState(false);
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
@@ -56,7 +55,7 @@ export default function Home({ navigation, recipes, onRecipeImported }: Props) {
       const recipe = await scrapeRecipe(url);
       setUrl('');
       setModalVisible(false);
-      const stored = await onRecipeImported(recipe);
+      const stored = await saveRecipe(recipe);
       navigation.navigate('RecipeDetail', { recipe: stored });
     } catch (err) {
       if (err instanceof ScraperError) {

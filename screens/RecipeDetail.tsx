@@ -15,13 +15,11 @@ import {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Feather } from '@expo/vector-icons';
 import { colors, spacing, borderRadius, fontSize, shadow } from '../styles/theme';
+import { useRecipes } from '../contexts/RecipesContext';
 import type { RootStackParamList } from '../types/navigation';
 import type { StoredRecipe } from '../types/recipe';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'RecipeDetail'> & {
-  onRecipeUpdated: (recipe: StoredRecipe) => Promise<void>;
-  onRecipeDeleted: (id: string, navigation: Props['navigation']) => Promise<void>;
-};
+type Props = NativeStackScreenProps<RootStackParamList, 'RecipeDetail'>;
 
 function formatDuration(iso: string | null): string | null {
   if (!iso) return null;
@@ -35,7 +33,8 @@ function formatDuration(iso: string | null): string | null {
   return null;
 }
 
-export default function RecipeDetail({ navigation, route, onRecipeUpdated, onRecipeDeleted }: Props) {
+export default function RecipeDetail({ navigation, route }: Props) {
+  const { updateRecipe, deleteRecipe } = useRecipes();
   const { recipe } = route.params;
 
   const [isEditing, setIsEditing] = useState(false);
@@ -65,7 +64,7 @@ export default function RecipeDetail({ navigation, route, onRecipeUpdated, onRec
       ingredients: editIngredients.filter((i) => i.trim() !== ''),
       instructions: editInstructions.filter((s) => s.trim() !== ''),
     };
-    await onRecipeUpdated(updated);
+    await updateRecipe(updated);
     navigation.setParams({ recipe: updated });
     setSaving(false);
     setIsEditing(false);
@@ -288,7 +287,8 @@ export default function RecipeDetail({ navigation, route, onRecipeUpdated, onRec
                 style={styles.deleteConfirmButton}
                 onPress={() => {
                   setDeleteModalVisible(false);
-                  onRecipeDeleted(recipe.id, navigation);
+                  deleteRecipe(recipe.id);
+                  navigation.goBack();
                 }}
               >
                 <Text style={styles.deleteConfirmButtonText}>Supprimer</Text>
