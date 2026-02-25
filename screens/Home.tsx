@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -9,13 +9,18 @@ import {
   TextInput,
   ActivityIndicator,
   Image,
+  LayoutAnimation,
 } from "react-native";
 import DraggableFlatList, {
   ScaleDecorator,
   type RenderItemParams,
 } from "react-native-draggable-flatlist";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import {
+  Ionicons,
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from "@expo/vector-icons";
 import {
   colors,
   spacing,
@@ -119,6 +124,7 @@ export default function Home({ navigation }: Props) {
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
 
   const toggleCollapsed = useCallback((id: string) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setCollapsedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -126,6 +132,31 @@ export default function Home({ navigation }: Props) {
       return next;
     });
   }, []);
+
+  const allSeparatorIds = useMemo(
+    () => items.filter(isSeparator).map((separator) => separator.id),
+    [items],
+  );
+  const allCollapsed =
+    allSeparatorIds.length > 0 &&
+    allSeparatorIds.every((id) => collapsedIds.has(id));
+
+  const handleToggleAll = useCallback(() => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    if (allCollapsed) {
+      setCollapsedIds(new Set());
+      return;
+    }
+    setCollapsedIds(new Set(allSeparatorIds));
+  }, [allCollapsed, allSeparatorIds]);
+
+  const handleCollapseAll = useCallback(() => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    const allSeparatorIds = items
+      .filter(isSeparator)
+      .map((separator) => separator.id);
+    setCollapsedIds(new Set(allSeparatorIds));
+  }, [items]);
 
   // Build a map of separator id -> hidden children for collapsed separators
   const hiddenChildrenMap = useMemo(() => {
@@ -229,9 +260,23 @@ export default function Home({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.headerSpacer} />
+        <TouchableOpacity
+          style={styles.headerIconButton}
+          onPress={handleToggleAll}
+          hitSlop={8}
+        >
+          <MaterialIcons
+            name={allCollapsed ? "unfold-more" : "unfold-less"}
+            size={24}
+            color={colors.primary}
+          />
+        </TouchableOpacity>
         <Text style={styles.title}>RecipEZ</Text>
-        <TouchableOpacity onPress={() => setSeparatorModalVisible(true)} hitSlop={8}>
+        <TouchableOpacity
+          style={styles.headerIconButton}
+          onPress={() => setSeparatorModalVisible(true)}
+          hitSlop={8}
+        >
           <MaterialCommunityIcons
             name="bookmark-plus"
             size={24}
@@ -383,8 +428,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.sm,
   },
-  headerSpacer: {
-    width: 24,
+  headerIconButton: {
+    width: 32,
+    alignItems: "center",
   },
   title: {
     fontSize: 32,
