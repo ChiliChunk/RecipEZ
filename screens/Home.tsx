@@ -95,6 +95,7 @@ export default function Home({ navigation, recipes, onRecipeImported }: Props) {
         transparent
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
+        statusBarTranslucent
       >
         <Pressable
           style={styles.modalOverlay}
