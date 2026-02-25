@@ -1,6 +1,7 @@
 import type { Recipe } from '../types/recipe';
 import { ScraperError } from './scraperError';
 import { scrapeMarmiton } from './marmitonScraper';
+import { scrape750g } from './750gScraper';
 
 export { ScraperError };
 
@@ -17,6 +18,15 @@ function isMarmiton(url: string): boolean {
   try {
     const { hostname } = new URL(url);
     return hostname === 'www.marmiton.org' || hostname === 'marmiton.org';
+  } catch {
+    return false;
+  }
+}
+
+function is750g(url: string): boolean {
+  try {
+    const { hostname } = new URL(url);
+    return hostname === 'www.750g.com' || hostname === '750g.com';
   } catch {
     return false;
   }
@@ -52,9 +62,9 @@ export async function scrapeRecipe(url: string): Promise<Recipe> {
     throw new ScraperError('URL invalide', 'INVALID_URL');
   }
 
-  if (!isMarmiton(url)) {
+  if (!isMarmiton(url) && !is750g(url)) {
     throw new ScraperError(
-      "Ce site n'est pas encore supporté. Seules les recettes Marmiton sont importables pour le moment.",
+      "Ce site n'est pas encore supporté. Seules les recettes Marmiton et 750g sont importables pour le moment.",
       'UNSUPPORTED_SITE',
     );
   }
@@ -68,6 +78,10 @@ export async function scrapeRecipe(url: string): Promise<Recipe> {
       `Erreur réseau: ${error instanceof Error ? error.message : 'inconnue'}`,
       'NETWORK_ERROR',
     );
+  }
+
+  if (is750g(url)) {
+    return scrape750g(url, html);
   }
 
   return scrapeMarmiton(url, html);

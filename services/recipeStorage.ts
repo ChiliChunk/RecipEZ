@@ -19,6 +19,12 @@ export async function updateRecipe(updated: StoredRecipe): Promise<void> {
   await AsyncStorage.setItem(RECIPES_KEY, JSON.stringify(next));
 }
 
+export async function deleteRecipe(id: string): Promise<void> {
+  const existing = await loadRecipes();
+  const next = existing.filter((r) => r.id !== id);
+  await AsyncStorage.setItem(RECIPES_KEY, JSON.stringify(next));
+}
+
 export async function saveRecipe(recipe: Recipe): Promise<StoredRecipe> {
   const stored: StoredRecipe = {
     ...recipe,
