@@ -7,13 +7,11 @@ import {
   TouchableOpacity,
   Linking,
 } from 'react-native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, spacing, borderRadius, fontSize } from '../styles/theme';
-import type { Recipe } from '../types/recipe';
+import type { RootStackParamList } from '../types/navigation';
 
-interface Props {
-  recipe: Recipe;
-  onBack: () => void;
-}
+type Props = NativeStackScreenProps<RootStackParamList, 'RecipeDetail'>;
 
 function formatDuration(iso: string | null): string | null {
   if (!iso) return null;
@@ -27,14 +25,15 @@ function formatDuration(iso: string | null): string | null {
   return null;
 }
 
-export default function RecipeDetail({ recipe, onBack }: Props) {
+export default function RecipeDetail({ navigation, route }: Props) {
+  const { recipe } = route.params;
   const prepTime = formatDuration(recipe.prepTime);
   const cookTime = formatDuration(recipe.cookTime);
   const totalTime = formatDuration(recipe.totalTime);
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={onBack}>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Text style={styles.backText}>← Retour</Text>
       </TouchableOpacity>
 

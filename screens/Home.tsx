@@ -11,15 +11,16 @@ import {
   FlatList,
   Image,
 } from 'react-native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, spacing, borderRadius, fontSize, shadow } from '../styles/theme';
 import { scrapeRecipe, ScraperError } from '../services/recipeScraper';
 import type { Recipe, StoredRecipe } from '../types/recipe';
+import type { RootStackParamList } from '../types/navigation';
 
-interface Props {
+type Props = NativeStackScreenProps<RootStackParamList, 'Home'> & {
   recipes: StoredRecipe[];
-  onRecipeImported: (recipe: Recipe) => void;
-  onSelectRecipe: (recipe: StoredRecipe) => void;
-}
+  onRecipeImported: (recipe: Recipe) => Promise<StoredRecipe>;
+};
 
 function RecipeCard({ recipe, onPress }: { recipe: StoredRecipe; onPress: () => void }) {
   return (
@@ -41,7 +42,7 @@ function RecipeCard({ recipe, onPress }: { recipe: StoredRecipe; onPress: () => 
   );
 }
 
-export default function Home({ recipes, onRecipeImported, onSelectRecipe }: Props) {
+export default function Home({ navigation, recipes, onRecipeImported }: Props) {
   const [modalVisible, setModalVisible] = useState(false);
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
@@ -54,7 +55,8 @@ export default function Home({ recipes, onRecipeImported, onSelectRecipe }: Prop
       const recipe = await scrapeRecipe(url);
       setUrl('');
       setModalVisible(false);
-      onRecipeImported(recipe);
+      const stored = await onRecipeImported(recipe);
+      navigation.navigate('RecipeDetail', { recipe: stored });
     } catch (err) {
       if (err instanceof ScraperError) {
         setError(err.message);
@@ -82,7 +84,7 @@ export default function Home({ recipes, onRecipeImported, onSelectRecipe }: Prop
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
-            <RecipeCard recipe={item} onPress={() => onSelectRecipe(item)} />
+            <RecipeCard recipe={item} onPress={() => navigation.navigate('RecipeDetail', { recipe: item })} />
           )}
         />
       )}
