@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { colors, darkColors } from "../styles/theme";
 
-export type AppIcon = "wowCooking" | "modern";
+export type AppIcon = "wow_cooking" | "modern";
 export type ThemeColors = typeof colors;
 
 type SettingsContextType = {
@@ -20,12 +20,12 @@ const KEY_ICON = "settings:appIcon";
 const KEY_DARK = "settings:darkMode";
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
-  const [appIcon, setAppIconState] = useState<AppIcon>("wowCooking");
+  const [appIcon, setAppIconState] = useState<AppIcon>("wow_cooking");
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
     AsyncStorage.multiGet([KEY_ICON, KEY_DARK]).then(([[, icon], [, dark]]) => {
-      if (icon === "wowCooking" || icon === "modern") setAppIconState(icon);
+      if (icon === "wow_cooking" || icon === "modern") setAppIconState(icon);
       if (dark === "true") setDarkMode(true);
     });
   }, []);

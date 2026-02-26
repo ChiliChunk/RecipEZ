@@ -20,7 +20,8 @@
         "foregroundImage": "./assets/wowCooking.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.chilichunk.recipease"
     },
     "web": {
       "favicon": "./assets/wowCooking.png"
@@ -30,7 +31,7 @@
       [
         "expo-dynamic-app-icon",
         {
-          "wowCooking": {
+          "wow_cooking": {
             "image": "./assets/wowCooking.png",
             "prerendered": true
           },
@@ -40,6 +41,11 @@
           }
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "c896b920-637f-4903-98c0-9544033e7d78"
+      }
+    }
   }
 }

@@ -31,7 +31,7 @@ type ImportStep =
   | { stage: "done"; success: false; message: string };
 
 const ICONS: { key: AppIcon; label: string; image: ReturnType<typeof require> }[] = [
-  { key: "wowCooking", label: "Classic", image: require("../assets/wowCooking.png") },
+  { key: "wow_cooking", label: "Classic", image: require("../assets/wowCooking.png") },
   { key: "modern", label: "Modern", image: require("../assets/icon.png") },
 ];
 
