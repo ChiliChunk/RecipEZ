@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "RecipEZ",
-    "slug": "recipez",
+    "name": "Recipease",
+    "slug": "recipease",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/wowCooking.png",

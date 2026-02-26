@@ -309,7 +309,7 @@ export default function Home({ navigation }: Props) {
             color={colors.primary}
           />
         </TouchableOpacity>
-        <Text style={styles.title}>RecipEZ</Text>
+        <Text style={styles.title}>Recipease</Text>
         <TouchableOpacity
           style={styles.headerIconButton}
           onPress={() => setSeparatorModalVisible(true)}

@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Recipe, StoredRecipe, ListItem, Separator } from '../types/recipe';
 import { isSeparator } from '../types/recipe';
 
-const RECIPES_KEY = '@recipez/recipes';
+const RECIPES_KEY = '@recipease/recipes';
 
 export async function loadItems(): Promise<ListItem[]> {
   try {
