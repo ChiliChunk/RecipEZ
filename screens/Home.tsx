@@ -169,6 +169,7 @@ export default function Home({ navigation }: Props) {
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
   const [searchVisible, setSearchVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const urlInputRef = useRef<TextInput>(null);
   const searchInputRef = useRef<TextInput>(null);
   const separatorInputRef = useRef<TextInput>(null);
 
@@ -375,9 +376,10 @@ export default function Home({ navigation }: Props) {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
         statusBarTranslucent
+        onShow={() => setTimeout(() => urlInputRef.current?.focus(), 50)}
       >
         <Pressable
-          style={styles.modalOverlay}
+          style={styles.newRecipeModalOverlay}
           onPress={() => setModalVisible(false)}
         >
           <Pressable style={styles.modalContent} onPress={() => {}}>
@@ -386,6 +388,7 @@ export default function Home({ navigation }: Props) {
               Collez le lien d'une recette pour l'importer
             </Text>
             <TextInput
+              ref={urlInputRef}
               style={styles.urlInput}
               placeholder="https://..."
               placeholderTextColor={colors.textMuted}
@@ -720,6 +723,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.overlay,
     justifyContent: "center",
     alignItems: "center",
+  },
+  newRecipeModalOverlay: {
+    flex: 1,
+    backgroundColor: colors.overlay,
+    justifyContent: "flex-start",
+    alignItems: "center",
+    paddingTop: 120,
   },
   separatorModalOverlay: {
     flex: 1,
