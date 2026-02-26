@@ -83,3 +83,15 @@ export async function reorderItems(items: ListItem[]): Promise<ListItem[]> {
 
 /** @deprecated use reorderItems instead */
 export const reorderRecipes = reorderItems;
+
+export async function importItems(incoming: ListItem[]): Promise<ListItem[]> {
+  const backup = await AsyncStorage.getItem(RECIPES_KEY);
+  const withOrder = incoming.map((r, i) => ({ ...r, sortOrder: i }));
+  try {
+    await AsyncStorage.setItem(RECIPES_KEY, JSON.stringify(withOrder));
+    return withOrder;
+  } catch (e) {
+    if (backup !== null) await AsyncStorage.setItem(RECIPES_KEY, backup);
+    throw e;
+  }
+}

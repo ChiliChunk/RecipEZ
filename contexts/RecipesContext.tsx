@@ -12,6 +12,7 @@ type RecipesContextType = {
   deleteItem: (id: string) => Promise<void>;
   reorderItems: (items: ListItem[]) => Promise<void>;
   addSeparator: (name: string) => Promise<Separator>;
+  importItems: (incoming: ListItem[]) => Promise<void>;
 };
 
 const RecipesContext = createContext<RecipesContextType | null>(null);
@@ -53,8 +54,13 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
     return separator;
   };
 
+  const importItems = async (incoming: ListItem[]): Promise<void> => {
+    const saved = await storage.importItems(incoming);
+    setItems(saved);
+  };
+
   return (
-    <RecipesContext.Provider value={{ items, recipes, saveRecipe, updateRecipe, deleteItem, reorderItems, addSeparator }}>
+    <RecipesContext.Provider value={{ items, recipes, saveRecipe, updateRecipe, deleteItem, reorderItems, addSeparator, importItems }}>
       {children}
     </RecipesContext.Provider>
   );
