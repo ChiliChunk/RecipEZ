@@ -14,7 +14,6 @@ import {
   Platform,
 } from "react-native";
 import DraggableFlatList, {
-  ScaleDecorator,
   type RenderItemParams,
 } from "react-native-draggable-flatlist";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -35,128 +34,10 @@ import { useRecipes } from "../contexts/RecipesContext";
 import type { StoredRecipe, ListItem } from "../types/recipe";
 import { isSeparator } from "../types/recipe";
 import type { RootStackParamList } from "../types/navigation";
+import { RecipeCard } from "../components/RecipeCard";
+import { SeparatorCard } from "../components/SeparatorCard";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
-
-function formatDuration(iso: string | null): string | null {
-  if (!iso) return null;
-  const match = iso.match(/^PT(?:(\d+)H)?(?:(\d+)M)?$/);
-  if (!match) return iso;
-  const hours = match[1] ? parseInt(match[1], 10) : 0;
-  const minutes = match[2] ? parseInt(match[2], 10) : 0;
-  if (hours && minutes) return `${hours}h${String(minutes).padStart(2, "0")}`;
-  if (hours) return `${hours}h`;
-  if (minutes) return `${minutes} min`;
-  return null;
-}
-
-function RecipeCard({
-  recipe,
-  onPress,
-  drag,
-  isActive,
-}: {
-  recipe: StoredRecipe;
-  onPress: () => void;
-  drag: () => void;
-  isActive: boolean;
-}) {
-  const prepTime = formatDuration(recipe.prepTime);
-  const cookTime = formatDuration(recipe.cookTime);
-
-  return (
-    <ScaleDecorator>
-      <TouchableOpacity
-        style={[styles.card, isActive && styles.cardActive]}
-        onPress={onPress}
-        onLongPress={drag}
-        delayLongPress={150}
-        activeOpacity={0.75}
-        disabled={isActive}
-      >
-        {recipe.imageUrl ? (
-          <Image source={{ uri: recipe.imageUrl }} style={styles.cardImage} />
-        ) : (
-          <View style={[styles.cardImage, styles.cardImagePlaceholder]}>
-            <Text style={styles.cardImagePlaceholderText}>🍽</Text>
-          </View>
-        )}
-        <View style={styles.cardBody}>
-          <Text style={styles.cardTitle} numberOfLines={2}>
-            {recipe.title}
-          </Text>
-          {(prepTime || cookTime) && (
-            <View style={styles.cardTimeRow}>
-              {prepTime && (
-                <View style={styles.cardTimeItem}>
-                  <MaterialCommunityIcons
-                    name="chef-hat"
-                    size={14}
-                    color={colors.primary}
-                    style={styles.cardTimeIcon}
-                  />
-                  <Text style={styles.cardServings}>{prepTime}</Text>
-                </View>
-              )}
-              {cookTime && (
-                <View style={styles.cardTimeItem}>
-                  <MaterialCommunityIcons
-                    name="stove"
-                    size={14}
-                    color={colors.primary}
-                    style={styles.cardTimeIcon}
-                  />
-                  <Text style={styles.cardServings}>{cookTime}</Text>
-                </View>
-              )}
-            </View>
-          )}
-        </View>
-      </TouchableOpacity>
-    </ScaleDecorator>
-  );
-}
-
-function SeparatorCard({
-  name,
-  drag,
-  isActive,
-  collapsed,
-  onToggle,
-  onDelete,
-}: {
-  name: string;
-  drag: () => void;
-  isActive: boolean;
-  collapsed: boolean;
-  onToggle: () => void;
-  onDelete: () => void;
-}) {
-  return (
-    <ScaleDecorator>
-      <TouchableOpacity
-        style={[styles.separator, isActive && styles.separatorActive]}
-        onPress={onToggle}
-        onLongPress={drag}
-        delayLongPress={150}
-        activeOpacity={0.75}
-        disabled={isActive}
-      >
-        <Ionicons
-          name={collapsed ? "chevron-forward" : "chevron-down"}
-          size={16}
-          color={colors.primary}
-          style={styles.separatorChevron}
-        />
-        <Text style={styles.separatorText}>{name}</Text>
-        <View style={styles.separatorLine} />
-        <TouchableOpacity onPress={onDelete} hitSlop={8} style={styles.separatorDelete}>
-          <Ionicons name="close" size={14} color={colors.error} />
-        </TouchableOpacity>
-      </TouchableOpacity>
-    </ScaleDecorator>
-  );
-}
 
 export default function Home({ navigation }: Props) {
   const { items, saveRecipe, reorderItems, addSeparator, deleteItem } = useRecipes();
@@ -600,91 +481,6 @@ const styles = StyleSheet.create({
   list: {
     paddingHorizontal: spacing.md,
     paddingBottom: 100,
-  },
-  separator: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.xs,
-    marginBottom: spacing.xs,
-  },
-  separatorActive: {
-    opacity: 0.8,
-  },
-  separatorLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.primaryLight,
-  },
-  separatorChevron: {
-    marginRight: 2,
-  },
-  separatorDelete: {
-    marginLeft: spacing.xs,
-  },
-  separatorText: {
-    fontSize: fontSize.sm,
-    fontWeight: "600",
-    color: colors.primary,
-    paddingHorizontal: spacing.xs,
-    textTransform: "uppercase",
-    letterSpacing: 1,
-  },
-  card: {
-    flexDirection: "row",
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    marginBottom: spacing.sm,
-    overflow: "hidden",
-    elevation: shadow.elevation,
-    shadowColor: shadow.color,
-    shadowOffset: shadow.offset,
-    shadowOpacity: shadow.opacity,
-    shadowRadius: shadow.radius,
-  },
-  cardActive: {
-    opacity: 0.9,
-    elevation: shadow.elevation + 4,
-    shadowOpacity: shadow.opacity + 0.1,
-  },
-  cardImage: {
-    width: 90,
-    height: 90,
-  },
-  cardImagePlaceholder: {
-    backgroundColor: colors.primaryLight,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cardImagePlaceholderText: {
-    fontSize: fontSize.xl,
-  },
-  cardBody: {
-    flex: 1,
-    padding: spacing.sm,
-    justifyContent: "center",
-  },
-  cardTitle: {
-    fontSize: fontSize.md,
-    fontWeight: "600",
-    color: colors.text,
-    marginBottom: 4,
-  },
-  cardServings: {
-    fontSize: fontSize.sm,
-    color: colors.textMuted,
-  },
-  cardTimeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  cardTimeItem: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  cardTimeIcon: {
-    marginRight: 4,
   },
   fabSmall: {
     position: "absolute",
