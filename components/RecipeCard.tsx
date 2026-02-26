@@ -1,7 +1,8 @@
 import { StyleSheet, Text, View, TouchableOpacity, Image } from "react-native";
 import { ScaleDecorator } from "react-native-draggable-flatlist";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { colors, spacing, borderRadius, fontSize, shadow } from "../styles/theme";
+import { spacing, borderRadius, fontSize, shadow } from "../styles/theme";
+import { useColors } from "../contexts/SettingsContext";
 import type { StoredRecipe } from "../types/recipe";
 
 function formatDuration(iso: string | null): string | null {
@@ -27,13 +28,14 @@ export function RecipeCard({
   drag: () => void;
   isActive: boolean;
 }) {
+  const colors = useColors();
   const prepTime = formatDuration(recipe.prepTime);
   const cookTime = formatDuration(recipe.cookTime);
 
   return (
     <ScaleDecorator>
       <TouchableOpacity
-        style={[styles.card, isActive && styles.cardActive]}
+        style={[styles.card, { backgroundColor: colors.surface }, isActive && styles.cardActive]}
         onPress={onPress}
         onLongPress={drag}
         delayLongPress={150}
@@ -43,12 +45,12 @@ export function RecipeCard({
         {recipe.imageUrl ? (
           <Image source={{ uri: recipe.imageUrl }} style={styles.cardImage} />
         ) : (
-          <View style={[styles.cardImage, styles.cardImagePlaceholder]}>
+          <View style={[styles.cardImage, styles.cardImagePlaceholder, { backgroundColor: colors.primaryLight }]}>
             <Text style={styles.cardImagePlaceholderText}>🍽</Text>
           </View>
         )}
         <View style={styles.cardBody}>
-          <Text style={styles.cardTitle} numberOfLines={2}>
+          <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={2}>
             {recipe.title}
           </Text>
           {(prepTime || cookTime) && (
@@ -61,7 +63,7 @@ export function RecipeCard({
                     color={colors.primary}
                     style={styles.cardTimeIcon}
                   />
-                  <Text style={styles.cardServings}>{prepTime}</Text>
+                  <Text style={[styles.cardServings, { color: colors.textMuted }]}>{prepTime}</Text>
                 </View>
               )}
               {cookTime && (
@@ -72,7 +74,7 @@ export function RecipeCard({
                     color={colors.primary}
                     style={styles.cardTimeIcon}
                   />
-                  <Text style={styles.cardServings}>{cookTime}</Text>
+                  <Text style={[styles.cardServings, { color: colors.textMuted }]}>{cookTime}</Text>
                 </View>
               )}
             </View>
@@ -86,7 +88,6 @@ export function RecipeCard({
 const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     marginBottom: spacing.sm,
     overflow: "hidden",
@@ -106,7 +107,6 @@ const styles = StyleSheet.create({
     height: 90,
   },
   cardImagePlaceholder: {
-    backgroundColor: colors.primaryLight,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -121,12 +121,10 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: fontSize.md,
     fontWeight: "600",
-    color: colors.text,
     marginBottom: 4,
   },
   cardServings: {
     fontSize: fontSize.sm,
-    color: colors.textMuted,
   },
   cardTimeRow: {
     flexDirection: "row",

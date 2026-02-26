@@ -12,6 +12,20 @@ export const colors = {
   overlay: 'rgba(45,24,16,0.5)',
 };
 
+export const darkColors = {
+  primary: '#FF8C42',
+  primaryDark: '#E67332',
+  primaryLight: '#5C3010',
+  background: '#2C1F1A',
+  surface: '#3D2D26',
+  text: '#F5EDE8',
+  textMuted: '#A08880',
+  border: '#3D2820',
+  success: '#4CAF50',
+  error: '#D94040',
+  overlay: 'rgba(0,0,0,0.7)',
+};
+
 export const spacing = {
   xs: 8,
   sm: 12,

@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
-import { colors, spacing, fontSize } from "../styles/theme";
+import { spacing, fontSize } from "../styles/theme";
+import { useColors } from "../contexts/SettingsContext";
 
 type Props = {
   allCollapsed: boolean;
@@ -10,8 +11,9 @@ type Props = {
 };
 
 export function HomeHeader({ allCollapsed, onToggleAll, onAddSeparator, onSettings }: Props) {
+  const colors = useColors();
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, { backgroundColor: colors.background }]}>
       <View style={styles.side}>
         <TouchableOpacity style={styles.iconButton} onPress={onAddSeparator} hitSlop={8}>
           <MaterialCommunityIcons name="bookmark-plus" size={24} color={colors.primary} />
@@ -24,7 +26,7 @@ export function HomeHeader({ allCollapsed, onToggleAll, onAddSeparator, onSettin
           />
         </TouchableOpacity>
       </View>
-      <Text style={styles.title}>Recipease</Text>
+      <Text style={[styles.title, { color: colors.primary }]}>Recipease</Text>
       <View style={[styles.side, styles.sideRight]}>
         <TouchableOpacity style={styles.iconButton} onPress={onSettings} hitSlop={8}>
           <MaterialIcons name="settings" size={18} color={colors.primary} />
@@ -59,6 +61,5 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontFamily: "Barriecito_400Regular",
-    color: colors.primary,
   },
 });

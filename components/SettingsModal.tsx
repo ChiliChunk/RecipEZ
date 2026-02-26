@@ -6,10 +6,11 @@ import {
   Pressable,
   TouchableOpacity,
   Image,
+  Switch,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { colors, spacing, borderRadius, fontSize } from "../styles/theme";
-import { useSettings, type AppIcon } from "../contexts/SettingsContext";
+import { spacing, borderRadius, fontSize } from "../styles/theme";
+import { useSettings, useColors, type AppIcon } from "../contexts/SettingsContext";
 
 type Props = {
   visible: boolean;
@@ -22,7 +23,8 @@ const ICONS: { key: AppIcon; label: string; image: ReturnType<typeof require> }[
 ];
 
 export function SettingsModal({ visible, onClose }: Props) {
-  const { appIcon, setAppIcon } = useSettings();
+  const { appIcon, setAppIcon, darkMode, toggleDarkMode } = useSettings();
+  const colors = useColors();
 
   return (
     <Modal
@@ -32,23 +34,27 @@ export function SettingsModal({ visible, onClose }: Props) {
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable style={styles.content} onPress={() => {}}>
-          <Text style={styles.title}>Paramètres</Text>
+      <Pressable style={[styles.overlay, { backgroundColor: colors.overlay }]} onPress={onClose}>
+        <Pressable style={[styles.content, { backgroundColor: colors.surface }]} onPress={() => {}}>
+          <Text style={[styles.title, { color: colors.text }]}>Paramètres</Text>
 
-          <Text style={styles.sectionLabel}>Icône de l'application</Text>
+          <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Icône de l'application</Text>
           <View style={styles.iconRow}>
             {ICONS.map(({ key, label, image }) => {
               const selected = appIcon === key;
               return (
                 <TouchableOpacity
                   key={key}
-                  style={[styles.iconOption, selected && styles.iconOptionSelected]}
+                  style={[
+                    styles.iconOption,
+                    { borderColor: colors.border },
+                    selected && { borderColor: colors.primary, backgroundColor: colors.primaryLight },
+                  ]}
                   onPress={() => setAppIcon(key)}
                   activeOpacity={0.7}
                 >
                   <Image source={image} style={styles.iconPreview} resizeMode="cover" />
-                  <Text style={[styles.iconLabel, selected && styles.iconLabelSelected]}>
+                  <Text style={[styles.iconLabel, { color: selected ? colors.primary : colors.textMuted }]}>
                     {label}
                   </Text>
                   {selected && (
@@ -63,6 +69,18 @@ export function SettingsModal({ visible, onClose }: Props) {
               );
             })}
           </View>
+
+          <Text style={[styles.sectionLabel, { color: colors.textMuted, marginTop: spacing.lg }]}>Apparence</Text>
+          <View style={styles.switchRow}>
+            <MaterialIcons name="dark-mode" size={20} color={colors.textMuted} />
+            <Text style={[styles.switchLabel, { color: colors.text }]}>Thème sombre</Text>
+            <Switch
+              value={darkMode}
+              onValueChange={toggleDarkMode}
+              trackColor={{ false: colors.border, true: colors.primaryLight }}
+              thumbColor={darkMode ? colors.primary : colors.textMuted}
+            />
+          </View>
         </Pressable>
       </Pressable>
     </Modal>
@@ -72,13 +90,11 @@ export function SettingsModal({ visible, onClose }: Props) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: colors.overlay,
     justifyContent: "center",
     alignItems: "center",
   },
   content: {
     width: "85%",
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.xl,
     alignItems: "center",
@@ -87,13 +103,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: fontSize.lg,
     fontWeight: "bold",
-    color: colors.text,
     marginBottom: spacing.xl,
   },
   sectionLabel: {
     fontSize: fontSize.sm,
     fontWeight: "600",
-    color: colors.textMuted,
     textTransform: "uppercase",
     letterSpacing: 0.8,
     alignSelf: "flex-start",
@@ -109,14 +123,9 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     borderWidth: 2,
-    borderColor: colors.border,
     borderRadius: borderRadius.md,
     padding: spacing.sm,
     gap: spacing.xs,
-  },
-  iconOptionSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryLight,
   },
   iconPreview: {
     width: 64,
@@ -126,14 +135,20 @@ const styles = StyleSheet.create({
   iconLabel: {
     fontSize: fontSize.sm,
     fontWeight: "600",
-    color: colors.textMuted,
-  },
-  iconLabelSelected: {
-    color: colors.primary,
   },
   iconCheck: {
     position: "absolute",
     top: spacing.xs,
     right: spacing.xs,
+  },
+  switchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    gap: spacing.sm,
+  },
+  switchLabel: {
+    flex: 1,
+    fontSize: fontSize.md,
   },
 });

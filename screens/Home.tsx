@@ -11,7 +11,8 @@ import DraggableFlatList, {
 } from "react-native-draggable-flatlist";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, borderRadius, fontSize, shadow } from "../styles/theme";
+import { spacing, borderRadius, fontSize, shadow } from "../styles/theme";
+import { useColors } from "../contexts/SettingsContext";
 import { useRecipes } from "../contexts/RecipesContext";
 import type { ListItem } from "../types/recipe";
 import { isSeparator } from "../types/recipe";
@@ -27,6 +28,7 @@ import { SettingsModal } from "../components/SettingsModal";
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 
 export default function Home({ navigation }: Props) {
+  const colors = useColors();
   const { items, reorderItems, deleteItem } = useRecipes();
   const [importVisible, setImportVisible] = useState(false);
   const [separatorVisible, setSeparatorVisible] = useState(false);
@@ -127,7 +129,7 @@ export default function Home({ navigation }: Props) {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <HomeHeader
         allCollapsed={allCollapsed}
         onToggleAll={handleToggleAll}
@@ -137,7 +139,7 @@ export default function Home({ navigation }: Props) {
 
       {items.length === 0 ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyStateText}>
+          <Text style={[styles.emptyStateText, { color: colors.textMuted }]}>
             Aucune recette enregistrée.{"\n"}Importez votre première recette !
           </Text>
         </View>
@@ -151,10 +153,10 @@ export default function Home({ navigation }: Props) {
         />
       )}
 
-      <TouchableOpacity style={styles.fabSmall} onPress={() => setSearchVisible(true)}>
+      <TouchableOpacity style={[styles.fabSmall, { backgroundColor: colors.surface }]} onPress={() => setSearchVisible(true)}>
         <Ionicons name="search" size={20} color={colors.primary} />
       </TouchableOpacity>
-      <TouchableOpacity style={styles.fab} onPress={() => setImportVisible(true)}>
+      <TouchableOpacity style={[styles.fab, { backgroundColor: colors.primary }]} onPress={() => setImportVisible(true)}>
         <Ionicons name="add" size={32} color={colors.surface} />
       </TouchableOpacity>
 
@@ -183,7 +185,6 @@ export default function Home({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   emptyState: {
     flex: 1,
@@ -193,7 +194,6 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     fontSize: fontSize.md,
-    color: colors.textMuted,
     textAlign: "center",
     lineHeight: 24,
   },
@@ -208,7 +208,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: borderRadius.sm,
-    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
     elevation: shadow.elevation,
@@ -224,7 +223,6 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
     elevation: shadow.elevation,

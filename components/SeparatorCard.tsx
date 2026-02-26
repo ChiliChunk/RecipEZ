@@ -1,7 +1,8 @@
 import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { ScaleDecorator } from "react-native-draggable-flatlist";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, fontSize } from "../styles/theme";
+import { spacing, fontSize } from "../styles/theme";
+import { useColors } from "../contexts/SettingsContext";
 
 export function SeparatorCard({
   name,
@@ -18,6 +19,7 @@ export function SeparatorCard({
   onToggle: () => void;
   onDelete: () => void;
 }) {
+  const colors = useColors();
   return (
     <ScaleDecorator>
       <TouchableOpacity
@@ -34,8 +36,8 @@ export function SeparatorCard({
           color={colors.primary}
           style={styles.separatorChevron}
         />
-        <Text style={styles.separatorText}>{name}</Text>
-        <View style={styles.separatorLine} />
+        <Text style={[styles.separatorText, { color: colors.primary }]}>{name}</Text>
+        <View style={[styles.separatorLine, { backgroundColor: colors.primaryLight }]} />
         <TouchableOpacity onPress={onDelete} hitSlop={8} style={styles.separatorDelete}>
           <Ionicons name="close" size={14} color={colors.error} />
         </TouchableOpacity>
@@ -58,7 +60,6 @@ const styles = StyleSheet.create({
   separatorLine: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.primaryLight,
   },
   separatorChevron: {
     marginRight: 2,
@@ -69,7 +70,6 @@ const styles = StyleSheet.create({
   separatorText: {
     fontSize: fontSize.sm,
     fontWeight: "600",
-    color: colors.primary,
     paddingHorizontal: spacing.xs,
     textTransform: "uppercase",
     letterSpacing: 1,

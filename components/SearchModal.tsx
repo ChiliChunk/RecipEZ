@@ -12,7 +12,8 @@ import {
   Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, borderRadius, fontSize } from "../styles/theme";
+import { spacing, borderRadius, fontSize } from "../styles/theme";
+import { useColors } from "../contexts/SettingsContext";
 import { useRecipes } from "../contexts/RecipesContext";
 import { isSeparator } from "../types/recipe";
 import type { StoredRecipe } from "../types/recipe";
@@ -24,6 +25,7 @@ type Props = {
 };
 
 export function SearchModal({ visible, onClose, onSelectRecipe }: Props) {
+  const colors = useColors();
   const { items } = useRecipes();
   const [searchQuery, setSearchQuery] = useState("");
   const inputRef = useRef<TextInput>(null);
@@ -50,13 +52,13 @@ export function SearchModal({ visible, onClose, onSelectRecipe }: Props) {
       statusBarTranslucent
       onShow={() => setTimeout(() => inputRef.current?.focus(), 50)}
     >
-      <Pressable style={styles.overlay} onPress={handleClose}>
-        <Pressable style={styles.container} onPress={() => {}}>
-          <View style={styles.inputRow}>
+      <Pressable style={[styles.overlay, { backgroundColor: colors.overlay }]} onPress={handleClose}>
+        <Pressable style={[styles.container, { backgroundColor: colors.surface }]} onPress={() => {}}>
+          <View style={[styles.inputRow, { borderBottomColor: colors.border }]}>
             <Ionicons name="search" size={20} color={colors.primary} style={styles.searchIcon} />
             <TextInput
               ref={inputRef}
-              style={styles.input}
+              style={[styles.input, { color: colors.text }]}
               placeholder="Rechercher une recette..."
               placeholderTextColor={colors.textMuted}
               value={searchQuery}
@@ -91,21 +93,21 @@ export function SearchModal({ visible, onClose, onSelectRecipe }: Props) {
                   {item.imageUrl ? (
                     <Image source={{ uri: item.imageUrl }} style={styles.resultImage} />
                   ) : (
-                    <View style={[styles.resultImage, styles.resultImagePlaceholder]}>
+                    <View style={[styles.resultImage, styles.resultImagePlaceholder, { backgroundColor: colors.primaryLight }]}>
                       <Text style={{ fontSize: 16 }}>🍽</Text>
                     </View>
                   )}
-                  <Text style={styles.resultTitle} numberOfLines={1}>
+                  <Text style={[styles.resultTitle, { color: colors.text }]} numberOfLines={1}>
                     {item.title}
                   </Text>
                   <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
                 </TouchableOpacity>
               )}
-              ItemSeparatorComponent={() => <View style={styles.resultSeparator} />}
+              ItemSeparatorComponent={() => <View style={[styles.resultSeparator, { backgroundColor: colors.border }]} />}
             />
           ) : (
             <View style={styles.empty}>
-              <Text style={styles.emptyText}>Aucune recette trouvée</Text>
+              <Text style={[styles.emptyText, { color: colors.textMuted }]}>Aucune recette trouvée</Text>
             </View>
           )}
         </Pressable>
@@ -117,13 +119,11 @@ export function SearchModal({ visible, onClose, onSelectRecipe }: Props) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: colors.overlay,
     justifyContent: "flex-start",
     paddingTop: 80,
     paddingHorizontal: spacing.md,
   },
   container: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     overflow: "hidden",
     ...Platform.select({
@@ -144,7 +144,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   searchIcon: {
     marginRight: spacing.sm,
@@ -152,7 +151,6 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: fontSize.lg,
-    color: colors.text,
     paddingVertical: 4,
   },
   resultsList: {
@@ -171,19 +169,16 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.sm,
   },
   resultImagePlaceholder: {
-    backgroundColor: colors.primaryLight,
     alignItems: "center",
     justifyContent: "center",
   },
   resultTitle: {
     flex: 1,
     fontSize: fontSize.md,
-    color: colors.text,
     fontWeight: "500",
   },
   resultSeparator: {
     height: 1,
-    backgroundColor: colors.border,
     marginLeft: spacing.md + 40 + spacing.sm,
   },
   empty: {
@@ -192,6 +187,5 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: fontSize.md,
-    color: colors.textMuted,
   },
 });

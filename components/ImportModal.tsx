@@ -9,7 +9,8 @@ import {
   TextInput,
   ActivityIndicator,
 } from "react-native";
-import { colors, spacing, borderRadius, fontSize } from "../styles/theme";
+import { spacing, borderRadius, fontSize } from "../styles/theme";
+import { useColors } from "../contexts/SettingsContext";
 import { scrapeRecipe, ScraperError } from "../services/recipeScraper";
 import { useRecipes } from "../contexts/RecipesContext";
 import type { StoredRecipe } from "../types/recipe";
@@ -21,6 +22,7 @@ type Props = {
 };
 
 export function ImportModal({ visible, onClose, onImported }: Props) {
+  const colors = useColors();
   const { saveRecipe } = useRecipes();
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
@@ -62,15 +64,15 @@ export function ImportModal({ visible, onClose, onImported }: Props) {
       statusBarTranslucent
       onShow={() => setTimeout(() => urlInputRef.current?.focus(), 50)}
     >
-      <Pressable style={styles.overlay} onPress={handleClose}>
-        <Pressable style={styles.content} onPress={() => {}}>
-          <Text style={styles.title}>Nouvelle recette</Text>
-          <Text style={styles.body}>
+      <Pressable style={[styles.overlay, { backgroundColor: colors.overlay }]} onPress={handleClose}>
+        <Pressable style={[styles.content, { backgroundColor: colors.surface }]} onPress={() => {}}>
+          <Text style={[styles.title, { color: colors.text }]}>Nouvelle recette</Text>
+          <Text style={[styles.body, { color: colors.textMuted }]}>
             Collez le lien d'une recette pour l'importer
           </Text>
           <TextInput
             ref={urlInputRef}
-            style={styles.input}
+            style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
             placeholder="https://..."
             placeholderTextColor={colors.textMuted}
             value={url}
@@ -80,20 +82,20 @@ export function ImportModal({ visible, onClose, onImported }: Props) {
             keyboardType="url"
             selectTextOnFocus
           />
-          {error && <Text style={styles.errorText}>{error}</Text>}
+          {error && <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>}
           <View style={styles.buttons}>
-            <TouchableOpacity style={styles.cancelButton} onPress={handleClose}>
-              <Text style={styles.cancelButtonText}>Annuler</Text>
+            <TouchableOpacity style={[styles.cancelButton, { borderColor: colors.border }]} onPress={handleClose}>
+              <Text style={[styles.cancelButtonText, { color: colors.textMuted }]}>Annuler</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.submitButton, (!url || loading) && styles.submitButtonDisabled]}
+              style={[styles.submitButton, { backgroundColor: colors.primary }, (!url || loading) && styles.submitButtonDisabled]}
               disabled={!url || loading}
               onPress={handleImport}
             >
               {loading ? (
                 <ActivityIndicator size="small" color={colors.surface} />
               ) : (
-                <Text style={styles.submitButtonText}>Importer</Text>
+                <Text style={[styles.submitButtonText, { color: colors.surface }]}>Importer</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -106,14 +108,12 @@ export function ImportModal({ visible, onClose, onImported }: Props) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: colors.overlay,
     justifyContent: "flex-start",
     alignItems: "center",
     paddingTop: 120,
   },
   content: {
     width: "85%",
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.xl,
     alignItems: "center",
@@ -121,27 +121,21 @@ const styles = StyleSheet.create({
   title: {
     fontSize: fontSize.lg,
     fontWeight: "bold",
-    color: colors.text,
     marginBottom: spacing.sm,
   },
   body: {
     fontSize: fontSize.md,
-    color: colors.textMuted,
     marginBottom: spacing.lg,
   },
   input: {
     width: "100%",
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: borderRadius.sm,
     padding: spacing.sm,
     fontSize: fontSize.md,
-    color: colors.text,
-    backgroundColor: colors.background,
     marginBottom: spacing.lg,
   },
   errorText: {
-    color: colors.error,
     fontSize: fontSize.md,
     marginBottom: spacing.sm,
     textAlign: "center",
@@ -155,15 +149,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     borderRadius: borderRadius.sm,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   cancelButtonText: {
-    color: colors.textMuted,
     fontSize: fontSize.md,
     fontWeight: "600",
   },
   submitButton: {
-    backgroundColor: colors.primary,
     paddingVertical: 10,
     paddingHorizontal: spacing.lg,
     borderRadius: borderRadius.sm,
@@ -172,7 +163,6 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   submitButtonText: {
-    color: colors.surface,
     fontSize: fontSize.md,
     fontWeight: "600",
   },

@@ -14,7 +14,8 @@ import {
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Feather } from '@expo/vector-icons';
-import { colors, spacing, borderRadius, fontSize, shadow } from '../styles/theme';
+import { spacing, borderRadius, fontSize, shadow } from '../styles/theme';
+import { useColors } from '../contexts/SettingsContext';
 import { useRecipes } from '../contexts/RecipesContext';
 import type { RootStackParamList } from '../types/navigation';
 import type { StoredRecipe } from '../types/recipe';
@@ -34,6 +35,7 @@ function formatDuration(iso: string | null): string | null {
 }
 
 export default function RecipeDetail({ navigation, route }: Props) {
+  const colors = useColors();
   const { updateRecipe, deleteItem } = useRecipes();
   const { recipe } = route.params;
 
@@ -75,15 +77,15 @@ export default function RecipeDetail({ navigation, route }: Props) {
   const totalTime = formatDuration(recipe.totalTime);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.headerRow}>
         {isEditing ? (
           <TouchableOpacity style={styles.backButton} onPress={handleCancel}>
-            <Text style={styles.backText}>✕ Annuler</Text>
+            <Text style={[styles.backText, { color: colors.primary }]}>✕ Annuler</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Text style={styles.backText}>← Retour</Text>
+            <Text style={[styles.backText, { color: colors.primary }]}>← Retour</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -91,29 +93,29 @@ export default function RecipeDetail({ navigation, route }: Props) {
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
         {isEditing ? (
           <View style={styles.editContainer}>
-            <Text style={styles.sectionTitle}>Titre</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Titre</Text>
             <TextInput
-              style={styles.editInput}
+              style={[styles.editInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.surface }]}
               value={editTitle}
               onChangeText={setEditTitle}
               placeholder="Titre de la recette"
               placeholderTextColor={colors.textMuted}
             />
 
-            <Text style={styles.sectionTitle}>Portions</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Portions</Text>
             <TextInput
-              style={styles.editInput}
+              style={[styles.editInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.surface }]}
               value={editServings}
               onChangeText={setEditServings}
               placeholder="ex: 4 personnes"
               placeholderTextColor={colors.textMuted}
             />
 
-            <Text style={styles.sectionTitle}>Ingrédients</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Ingrédients</Text>
             {editIngredients.map((item, index) => (
               <View key={index} style={styles.editListRow}>
                 <TextInput
-                  style={[styles.editInput, styles.editListInput]}
+                  style={[styles.editInput, styles.editListInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.surface }]}
                   value={item}
                   onChangeText={(text) => {
                     const next = [...editIngredients];
@@ -135,17 +137,17 @@ export default function RecipeDetail({ navigation, route }: Props) {
               onPress={() => setEditIngredients([...editIngredients, ''])}
             >
               <Feather name="plus" size={16} color={colors.primary} />
-              <Text style={styles.addItemText}>Ajouter un ingrédient</Text>
+              <Text style={[styles.addItemText, { color: colors.primary }]}>Ajouter un ingrédient</Text>
             </TouchableOpacity>
 
-            <Text style={[styles.sectionTitle, { marginTop: spacing.lg }]}>Étapes</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text, marginTop: spacing.lg }]}>Étapes</Text>
             {editInstructions.map((step, index) => (
               <View key={index} style={styles.editListRow}>
-                <View style={styles.stepNumberSmall}>
-                  <Text style={styles.stepNumberSmallText}>{index + 1}</Text>
+                <View style={[styles.stepNumberSmall, { backgroundColor: colors.primary }]}>
+                  <Text style={[styles.stepNumberSmallText, { color: colors.surface }]}>{index + 1}</Text>
                 </View>
                 <TextInput
-                  style={[styles.editInput, styles.editListInput]}
+                  style={[styles.editInput, styles.editListInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.surface }]}
                   value={step}
                   onChangeText={(text) => {
                     const next = [...editInstructions];
@@ -167,7 +169,7 @@ export default function RecipeDetail({ navigation, route }: Props) {
               onPress={() => setEditInstructions([...editInstructions, ''])}
             >
               <Feather name="plus" size={16} color={colors.primary} />
-              <Text style={styles.addItemText}>Ajouter une étape</Text>
+              <Text style={[styles.addItemText, { color: colors.primary }]}>Ajouter une étape</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -176,32 +178,32 @@ export default function RecipeDetail({ navigation, route }: Props) {
               <Image source={{ uri: recipe.imageUrl }} style={styles.image} />
             )}
 
-            <Text style={styles.title}>{recipe.title}</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{recipe.title}</Text>
 
             {(prepTime || cookTime || totalTime || recipe.servings) && (
               <View style={styles.infoRow}>
                 {prepTime && (
-                  <View style={styles.infoBadge}>
-                    <Text style={styles.infoLabel}>Prépa</Text>
-                    <Text style={styles.infoValue}>{prepTime}</Text>
+                  <View style={[styles.infoBadge, { backgroundColor: colors.primaryLight }]}>
+                    <Text style={[styles.infoLabel, { color: colors.text }]}>Prépa</Text>
+                    <Text style={[styles.infoValue, { color: colors.text }]}>{prepTime}</Text>
                   </View>
                 )}
                 {cookTime && (
-                  <View style={styles.infoBadge}>
-                    <Text style={styles.infoLabel}>Cuisson</Text>
-                    <Text style={styles.infoValue}>{cookTime}</Text>
+                  <View style={[styles.infoBadge, { backgroundColor: colors.primaryLight }]}>
+                    <Text style={[styles.infoLabel, { color: colors.text }]}>Cuisson</Text>
+                    <Text style={[styles.infoValue, { color: colors.text }]}>{cookTime}</Text>
                   </View>
                 )}
                 {totalTime && (
-                  <View style={styles.infoBadge}>
-                    <Text style={styles.infoLabel}>Total</Text>
-                    <Text style={styles.infoValue}>{totalTime}</Text>
+                  <View style={[styles.infoBadge, { backgroundColor: colors.primaryLight }]}>
+                    <Text style={[styles.infoLabel, { color: colors.text }]}>Total</Text>
+                    <Text style={[styles.infoValue, { color: colors.text }]}>{totalTime}</Text>
                   </View>
                 )}
                 {recipe.servings && (
-                  <View style={styles.infoBadge}>
-                    <Text style={styles.infoLabel}>Portions</Text>
-                    <Text style={styles.infoValue}>{recipe.servings}</Text>
+                  <View style={[styles.infoBadge, { backgroundColor: colors.primaryLight }]}>
+                    <Text style={[styles.infoLabel, { color: colors.text }]}>Portions</Text>
+                    <Text style={[styles.infoValue, { color: colors.text }]}>{recipe.servings}</Text>
                   </View>
                 )}
               </View>
@@ -209,11 +211,11 @@ export default function RecipeDetail({ navigation, route }: Props) {
 
             {recipe.ingredients.length > 0 && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Ingrédients</Text>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Ingrédients</Text>
                 {recipe.ingredients.map((ingredient, index) => (
                   <View key={index} style={styles.ingredientRow}>
-                    <Text style={styles.bullet}>•</Text>
-                    <Text style={styles.ingredientText}>{ingredient}</Text>
+                    <Text style={[styles.bullet, { color: colors.primary }]}>•</Text>
+                    <Text style={[styles.ingredientText, { color: colors.text }]}>{ingredient}</Text>
                   </View>
                 ))}
               </View>
@@ -221,13 +223,13 @@ export default function RecipeDetail({ navigation, route }: Props) {
 
             {recipe.instructions.length > 0 && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Étapes</Text>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Étapes</Text>
                 {recipe.instructions.map((step, index) => (
                   <View key={index} style={styles.stepRow}>
-                    <View style={styles.stepNumber}>
-                      <Text style={styles.stepNumberText}>{index + 1}</Text>
+                    <View style={[styles.stepNumber, { backgroundColor: colors.primary }]}>
+                      <Text style={[styles.stepNumberText, { color: colors.surface }]}>{index + 1}</Text>
                     </View>
-                    <Text style={styles.stepText}>{step}</Text>
+                    <Text style={[styles.stepText, { color: colors.text }]}>{step}</Text>
                   </View>
                 ))}
               </View>
@@ -237,24 +239,24 @@ export default function RecipeDetail({ navigation, route }: Props) {
               style={styles.sourceLink}
               onPress={() => Linking.openURL(recipe.sourceUrl)}
             >
-              <Text style={styles.sourceLinkText}>Voir la recette originale</Text>
+              <Text style={[styles.sourceLinkText, { color: colors.primary }]}>Voir la recette originale</Text>
             </TouchableOpacity>
           </>
         )}
       </ScrollView>
 
       {isEditing ? (
-        <TouchableOpacity style={styles.fab} onPress={handleSave} disabled={saving}>
+        <TouchableOpacity style={[styles.fab, { backgroundColor: colors.primary }]} onPress={handleSave} disabled={saving}>
           {saving
             ? <ActivityIndicator size="small" color={colors.surface} />
             : <Feather name="check" size={24} color={colors.surface} />}
         </TouchableOpacity>
       ) : (
         <>
-          <TouchableOpacity style={styles.fabSmall} onPress={() => setDeleteModalVisible(true)}>
+          <TouchableOpacity style={[styles.fabSmall, { backgroundColor: colors.error }]} onPress={() => setDeleteModalVisible(true)}>
             <Feather name="trash-2" size={18} color={colors.surface} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.fab} onPress={handleEditPress}>
+          <TouchableOpacity style={[styles.fab, { backgroundColor: colors.primary }]} onPress={handleEditPress}>
             <Feather name="edit" size={24} color={colors.surface} />
           </TouchableOpacity>
         </>
@@ -268,30 +270,30 @@ export default function RecipeDetail({ navigation, route }: Props) {
         statusBarTranslucent
       >
         <Pressable
-          style={styles.modalOverlay}
+          style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}
           onPress={() => setDeleteModalVisible(false)}
         >
-          <Pressable style={styles.modalContent} onPress={() => {}}>
-            <Text style={styles.modalTitle}>Supprimer la recette</Text>
-            <Text style={styles.modalBody}>
+          <Pressable style={[styles.modalContent, { backgroundColor: colors.surface }]} onPress={() => {}}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Supprimer la recette</Text>
+            <Text style={[styles.modalBody, { color: colors.textMuted }]}>
               Voulez-vous vraiment supprimer cette recette ?
             </Text>
             <View style={styles.modalButtons}>
               <TouchableOpacity
-                style={styles.cancelButton}
+                style={[styles.cancelButton, { borderColor: colors.border }]}
                 onPress={() => setDeleteModalVisible(false)}
               >
-                <Text style={styles.cancelButtonText}>Annuler</Text>
+                <Text style={[styles.cancelButtonText, { color: colors.textMuted }]}>Annuler</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.deleteConfirmButton}
+                style={[styles.deleteConfirmButton, { backgroundColor: colors.error }]}
                 onPress={() => {
                   setDeleteModalVisible(false);
                   deleteItem(recipe.id);
                   navigation.goBack();
                 }}
               >
-                <Text style={styles.deleteConfirmButtonText}>Supprimer</Text>
+                <Text style={[styles.deleteConfirmButtonText, { color: colors.surface }]}>Supprimer</Text>
               </TouchableOpacity>
             </View>
           </Pressable>
@@ -304,7 +306,6 @@ export default function RecipeDetail({ navigation, route }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   headerRow: {
     paddingTop: 50,
@@ -315,7 +316,6 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontSize: fontSize.md,
-    color: colors.primary,
     fontWeight: '600',
   },
   scroll: {
@@ -331,7 +331,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: fontSize.xl,
     fontWeight: 'bold',
-    color: colors.text,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.lg,
     paddingBottom: spacing.sm,
@@ -344,7 +343,6 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
   },
   infoBadge: {
-    backgroundColor: colors.primaryLight,
     borderRadius: borderRadius.sm,
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.sm,
@@ -352,12 +350,10 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: fontSize.sm,
-    color: colors.text,
     fontWeight: '600',
   },
   infoValue: {
     fontSize: fontSize.sm,
-    color: colors.text,
   },
   section: {
     paddingHorizontal: spacing.md,
@@ -366,7 +362,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: fontSize.lg,
     fontWeight: 'bold',
-    color: colors.text,
     marginBottom: spacing.sm,
   },
   ingredientRow: {
@@ -375,14 +370,12 @@ const styles = StyleSheet.create({
   },
   bullet: {
     fontSize: fontSize.md,
-    color: colors.primary,
     marginRight: spacing.xs,
     lineHeight: 22,
   },
   ingredientText: {
     flex: 1,
     fontSize: fontSize.md,
-    color: colors.text,
     lineHeight: 22,
   },
   stepRow: {
@@ -393,7 +386,6 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.sm,
@@ -401,13 +393,11 @@ const styles = StyleSheet.create({
   },
   stepNumberText: {
     fontSize: fontSize.sm,
-    color: colors.surface,
     fontWeight: 'bold',
   },
   stepText: {
     flex: 1,
     fontSize: fontSize.md,
-    color: colors.text,
     lineHeight: 22,
   },
   sourceLink: {
@@ -416,7 +406,6 @@ const styles = StyleSheet.create({
   },
   sourceLinkText: {
     fontSize: fontSize.sm,
-    color: colors.primary,
     textDecorationLine: 'underline',
   },
   fabSmall: {
@@ -426,7 +415,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: borderRadius.sm,
-    backgroundColor: colors.error,
     alignItems: 'center',
     justifyContent: 'center',
     elevation: shadow.elevation,
@@ -442,7 +430,6 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     elevation: shadow.elevation,
@@ -451,19 +438,15 @@ const styles = StyleSheet.create({
     shadowOpacity: shadow.opacity,
     shadowRadius: shadow.radius,
   },
-  // Edit mode styles
   editContainer: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
   },
   editInput: {
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: borderRadius.sm,
     padding: spacing.sm,
     fontSize: fontSize.md,
-    color: colors.text,
-    backgroundColor: colors.surface,
     marginBottom: spacing.sm,
   },
   editListRow: {
@@ -488,14 +471,12 @@ const styles = StyleSheet.create({
   },
   addItemText: {
     fontSize: fontSize.sm,
-    color: colors.primary,
     fontWeight: '600',
   },
   stepNumberSmall: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: spacing.sm,
@@ -503,18 +484,15 @@ const styles = StyleSheet.create({
   },
   stepNumberSmallText: {
     fontSize: 12,
-    color: colors.surface,
     fontWeight: 'bold',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContent: {
     width: '85%',
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.xl,
     alignItems: 'center',
@@ -522,12 +500,10 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: fontSize.lg,
     fontWeight: 'bold',
-    color: colors.text,
     marginBottom: spacing.sm,
   },
   modalBody: {
     fontSize: fontSize.md,
-    color: colors.textMuted,
     marginBottom: spacing.lg,
   },
   modalButtons: {
@@ -539,21 +515,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     borderRadius: borderRadius.sm,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   cancelButtonText: {
-    color: colors.textMuted,
     fontSize: fontSize.md,
     fontWeight: '600',
   },
   deleteConfirmButton: {
-    backgroundColor: colors.error,
     paddingVertical: 10,
     paddingHorizontal: spacing.lg,
     borderRadius: borderRadius.sm,
   },
   deleteConfirmButtonText: {
-    color: colors.surface,
     fontSize: fontSize.md,
     fontWeight: '600',
   },
