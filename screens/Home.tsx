@@ -444,6 +444,12 @@ export default function Home({ navigation }: Props) {
       </Modal>
 
       <TouchableOpacity
+        style={styles.fabSmall}
+        onPress={() => {}}
+      >
+        <Ionicons name="search" size={20} color={colors.primary} />
+      </TouchableOpacity>
+      <TouchableOpacity
         style={styles.fab}
         onPress={() => setModalVisible(true)}
       >
@@ -572,6 +578,22 @@ const styles = StyleSheet.create({
   },
   cardTimeIcon: {
     marginRight: 4,
+  },
+  fabSmall: {
+    position: "absolute",
+    bottom: spacing.xxl + 64 + spacing.sm,
+    right: spacing.lg + 10,
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.sm,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: shadow.elevation,
+    shadowColor: shadow.color,
+    shadowOffset: shadow.offset,
+    shadowOpacity: shadow.opacity,
+    shadowRadius: shadow.radius,
   },
   fab: {
     position: "absolute",
