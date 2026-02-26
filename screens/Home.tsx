@@ -22,6 +22,7 @@ import { ImportModal } from "../components/ImportModal";
 import { AddSeparatorModal } from "../components/AddSeparatorModal";
 import { SearchModal } from "../components/SearchModal";
 import { HomeHeader } from "../components/HomeHeader";
+import { SettingsModal } from "../components/SettingsModal";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 
@@ -30,6 +31,7 @@ export default function Home({ navigation }: Props) {
   const [importVisible, setImportVisible] = useState(false);
   const [separatorVisible, setSeparatorVisible] = useState(false);
   const [searchVisible, setSearchVisible] = useState(false);
+  const [settingsVisible, setSettingsVisible] = useState(false);
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
 
   const toggleCollapsed = useCallback((id: string) => {
@@ -130,7 +132,7 @@ export default function Home({ navigation }: Props) {
         allCollapsed={allCollapsed}
         onToggleAll={handleToggleAll}
         onAddSeparator={() => setSeparatorVisible(true)}
-        onSettings={() => {}}
+        onSettings={() => setSettingsVisible(true)}
       />
 
       {items.length === 0 ? (
@@ -169,6 +171,10 @@ export default function Home({ navigation }: Props) {
         visible={searchVisible}
         onClose={() => setSearchVisible(false)}
         onSelectRecipe={(recipe) => navigation.navigate("RecipeDetail", { recipe })}
+      />
+      <SettingsModal
+        visible={settingsVisible}
+        onClose={() => setSettingsVisible(false)}
       />
     </View>
   );
