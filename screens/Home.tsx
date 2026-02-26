@@ -10,11 +10,7 @@ import DraggableFlatList, {
   type RenderItemParams,
 } from "react-native-draggable-flatlist";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import {
-  Ionicons,
-  MaterialCommunityIcons,
-  MaterialIcons,
-} from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, borderRadius, fontSize, shadow } from "../styles/theme";
 import { useRecipes } from "../contexts/RecipesContext";
 import type { ListItem } from "../types/recipe";
@@ -25,6 +21,7 @@ import { SeparatorCard } from "../components/SeparatorCard";
 import { ImportModal } from "../components/ImportModal";
 import { AddSeparatorModal } from "../components/AddSeparatorModal";
 import { SearchModal } from "../components/SearchModal";
+import { HomeHeader } from "../components/HomeHeader";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 
@@ -129,23 +126,12 @@ export default function Home({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerIconButton} onPress={handleToggleAll} hitSlop={8}>
-          <MaterialIcons
-            name={allCollapsed ? "unfold-more" : "unfold-less"}
-            size={24}
-            color={colors.primary}
-          />
-        </TouchableOpacity>
-        <Text style={styles.title}>Recipease</Text>
-        <TouchableOpacity
-          style={styles.headerIconButton}
-          onPress={() => setSeparatorVisible(true)}
-          hitSlop={8}
-        >
-          <MaterialCommunityIcons name="bookmark-plus" size={24} color={colors.primary} />
-        </TouchableOpacity>
-      </View>
+      <HomeHeader
+        allCollapsed={allCollapsed}
+        onToggleAll={handleToggleAll}
+        onAddSeparator={() => setSeparatorVisible(true)}
+        onSettings={() => {}}
+      />
 
       {items.length === 0 ? (
         <View style={styles.emptyState}>
@@ -192,23 +178,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: 54,
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  headerIconButton: {
-    width: 32,
-    alignItems: "center",
-  },
-  title: {
-    fontSize: 32,
-    fontFamily: "Barriecito_400Regular",
-    color: colors.primary,
   },
   emptyState: {
     flex: 1,
