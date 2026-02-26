@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -10,6 +10,8 @@ import {
   ActivityIndicator,
   Image,
   LayoutAnimation,
+  FlatList,
+  Platform,
 } from "react-native";
 import DraggableFlatList, {
   ScaleDecorator,
@@ -121,12 +123,14 @@ function SeparatorCard({
   isActive,
   collapsed,
   onToggle,
+  onDelete,
 }: {
   name: string;
   drag: () => void;
   isActive: boolean;
   collapsed: boolean;
   onToggle: () => void;
+  onDelete: () => void;
 }) {
   return (
     <ScaleDecorator>
@@ -146,13 +150,16 @@ function SeparatorCard({
         />
         <Text style={styles.separatorText}>{name}</Text>
         <View style={styles.separatorLine} />
+        <TouchableOpacity onPress={onDelete} hitSlop={8} style={styles.separatorDelete}>
+          <Ionicons name="close" size={14} color={colors.error} />
+        </TouchableOpacity>
       </TouchableOpacity>
     </ScaleDecorator>
   );
 }
 
 export default function Home({ navigation }: Props) {
-  const { items, saveRecipe, reorderItems, addSeparator } = useRecipes();
+  const { items, saveRecipe, reorderItems, addSeparator, deleteItem } = useRecipes();
   const [modalVisible, setModalVisible] = useState(false);
   const [separatorModalVisible, setSeparatorModalVisible] = useState(false);
   const [separatorName, setSeparatorName] = useState("");
@@ -160,6 +167,10 @@ export default function Home({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
+  const [searchVisible, setSearchVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<TextInput>(null);
+  const separatorInputRef = useRef<TextInput>(null);
 
   const toggleCollapsed = useCallback((id: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -264,6 +275,7 @@ export default function Home({ navigation }: Props) {
             isActive={isActive}
             collapsed={collapsedIds.has(item.id)}
             onToggle={() => toggleCollapsed(item.id)}
+            onDelete={() => deleteItem(item.id)}
           />
         );
       }
@@ -294,6 +306,24 @@ export default function Home({ navigation }: Props) {
     },
     [reorderItems, hiddenChildrenMap],
   );
+
+  const searchResults = useMemo<StoredRecipe[]>(() => {
+    if (!searchQuery.trim()) return items.filter((i): i is StoredRecipe => !isSeparator(i));
+    const q = searchQuery.toLowerCase();
+    return items.filter(
+      (i): i is StoredRecipe => !isSeparator(i) && i.title.toLowerCase().includes(q),
+    );
+  }, [items, searchQuery]);
+
+  const handleSearchOpen = useCallback(() => {
+    setSearchQuery("");
+    setSearchVisible(true);
+  }, []);
+
+  const handleSearchClose = useCallback(() => {
+    setSearchVisible(false);
+    setSearchQuery("");
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -403,20 +433,21 @@ export default function Home({ navigation }: Props) {
         visible={separatorModalVisible}
         onRequestClose={() => setSeparatorModalVisible(false)}
         statusBarTranslucent
+        onShow={() => setTimeout(() => separatorInputRef.current?.focus(), 50)}
       >
         <Pressable
-          style={styles.modalOverlay}
+          style={styles.separatorModalOverlay}
           onPress={() => setSeparatorModalVisible(false)}
         >
           <Pressable style={styles.modalContent} onPress={() => {}}>
             <Text style={styles.modalTitle}>Nouveau séparateur</Text>
             <TextInput
+              ref={separatorInputRef}
               style={styles.urlInput}
               placeholder="Nom du séparateur"
               placeholderTextColor={colors.textMuted}
               value={separatorName}
               onChangeText={setSeparatorName}
-              autoFocus
             />
             <View style={styles.modalButtons}>
               <TouchableOpacity
@@ -445,7 +476,7 @@ export default function Home({ navigation }: Props) {
 
       <TouchableOpacity
         style={styles.fabSmall}
-        onPress={() => {}}
+        onPress={handleSearchOpen}
       >
         <Ionicons name="search" size={20} color={colors.primary} />
       </TouchableOpacity>
@@ -455,6 +486,76 @@ export default function Home({ navigation }: Props) {
       >
         <Ionicons name="add" size={32} color={colors.surface} />
       </TouchableOpacity>
+
+      <Modal
+        animationType="fade"
+        transparent
+        visible={searchVisible}
+        onRequestClose={handleSearchClose}
+        statusBarTranslucent
+        onShow={() => setTimeout(() => searchInputRef.current?.focus(), 50)}
+      >
+        <Pressable style={styles.searchOverlay} onPress={handleSearchClose}>
+          <Pressable style={styles.searchContainer} onPress={() => {}}>
+            <View style={styles.searchInputRow}>
+              <Ionicons name="search" size={20} color={colors.primary} style={styles.searchIcon} />
+              <TextInput
+                ref={searchInputRef}
+                style={styles.searchInput}
+                placeholder="Rechercher une recette..."
+                placeholderTextColor={colors.textMuted}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="done"
+                onSubmitEditing={handleSearchClose}
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity onPress={() => setSearchQuery("")} hitSlop={8}>
+                  <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {searchResults.length > 0 ? (
+              <FlatList
+                data={searchResults}
+                keyExtractor={(item) => item.id}
+                keyboardShouldPersistTaps="handled"
+                style={styles.searchResultsList}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.searchResultItem}
+                    onPress={() => {
+                      handleSearchClose();
+                      navigation.navigate("RecipeDetail", { recipe: item });
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    {item.imageUrl ? (
+                      <Image source={{ uri: item.imageUrl }} style={styles.searchResultImage} />
+                    ) : (
+                      <View style={[styles.searchResultImage, styles.searchResultImagePlaceholder]}>
+                        <Text style={{ fontSize: 16 }}>🍽</Text>
+                      </View>
+                    )}
+                    <Text style={styles.searchResultTitle} numberOfLines={1}>
+                      {item.title}
+                    </Text>
+                    <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+                  </TouchableOpacity>
+                )}
+                ItemSeparatorComponent={() => <View style={styles.searchResultSeparator} />}
+              />
+            ) : (
+              <View style={styles.searchEmpty}>
+                <Text style={styles.searchEmptyText}>Aucune recette trouvée</Text>
+              </View>
+            )}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -514,6 +615,9 @@ const styles = StyleSheet.create({
   },
   separatorChevron: {
     marginRight: 2,
+  },
+  separatorDelete: {
+    marginLeft: spacing.xs,
   },
   separatorText: {
     fontSize: fontSize.sm,
@@ -617,6 +721,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  separatorModalOverlay: {
+    flex: 1,
+    backgroundColor: colors.overlay,
+    justifyContent: "flex-start",
+    alignItems: "center",
+    paddingTop: 120,
+  },
   modalContent: {
     width: "85%",
     backgroundColor: colors.surface,
@@ -681,5 +792,84 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     marginBottom: spacing.sm,
     textAlign: "center",
+  },
+  searchOverlay: {
+    flex: 1,
+    backgroundColor: colors.overlay,
+    justifyContent: "flex-start",
+    paddingTop: 80,
+    paddingHorizontal: spacing.md,
+  },
+  searchContainer: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    overflow: "hidden",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.25,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 16,
+      },
+    }),
+  },
+  searchInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  searchIcon: {
+    marginRight: spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: fontSize.lg,
+    color: colors.text,
+    paddingVertical: 4,
+  },
+  searchResultsList: {
+    maxHeight: 340,
+  },
+  searchResultItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    gap: spacing.sm,
+  },
+  searchResultImage: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.sm,
+  },
+  searchResultImagePlaceholder: {
+    backgroundColor: colors.primaryLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  searchResultTitle: {
+    flex: 1,
+    fontSize: fontSize.md,
+    color: colors.text,
+    fontWeight: "500",
+  },
+  searchResultSeparator: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginLeft: spacing.md + 40 + spacing.sm,
+  },
+  searchEmpty: {
+    paddingVertical: spacing.xl,
+    alignItems: "center",
+  },
+  searchEmptyText: {
+    fontSize: fontSize.md,
+    color: colors.textMuted,
   },
 });

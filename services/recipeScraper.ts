@@ -2,6 +2,7 @@ import type { Recipe } from '../types/recipe';
 import { ScraperError } from './scraperError';
 import { scrapeMarmiton } from './marmitonScraper';
 import { scrape750g } from './750gScraper';
+import { scrapeCuisineAZ } from './cuisineazScraper';
 
 export { ScraperError };
 
@@ -27,6 +28,15 @@ function is750g(url: string): boolean {
   try {
     const { hostname } = new URL(url);
     return hostname === 'www.750g.com' || hostname === '750g.com';
+  } catch {
+    return false;
+  }
+}
+
+function isCuisineAZ(url: string): boolean {
+  try {
+    const { hostname } = new URL(url);
+    return hostname === 'www.cuisineaz.com' || hostname === 'cuisineaz.com';
   } catch {
     return false;
   }
@@ -62,9 +72,9 @@ export async function scrapeRecipe(url: string): Promise<Recipe> {
     throw new ScraperError('URL invalide', 'INVALID_URL');
   }
 
-  if (!isMarmiton(url) && !is750g(url)) {
+  if (!isMarmiton(url) && !is750g(url) && !isCuisineAZ(url)) {
     throw new ScraperError(
-      "Ce site n'est pas encore supporté. Seules les recettes Marmiton et 750g sont importables pour le moment.",
+      "Ce site n'est pas encore supporté. Seules les recettes Marmiton, 750g et CuisineAZ sont importables pour le moment.",
       'UNSUPPORTED_SITE',
     );
   }
@@ -82,6 +92,10 @@ export async function scrapeRecipe(url: string): Promise<Recipe> {
 
   if (is750g(url)) {
     return scrape750g(url, html);
+  }
+
+  if (isCuisineAZ(url)) {
+    return scrapeCuisineAZ(url, html);
   }
 
   return scrapeMarmiton(url, html);
