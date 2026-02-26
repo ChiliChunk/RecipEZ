@@ -4,15 +4,26 @@ import {
   View,
   Modal,
   Pressable,
+  TouchableOpacity,
+  Image,
 } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
 import { colors, spacing, borderRadius, fontSize } from "../styles/theme";
+import { useSettings, type AppIcon } from "../contexts/SettingsContext";
 
 type Props = {
   visible: boolean;
   onClose: () => void;
 };
 
+const ICONS: { key: AppIcon; label: string; image: ReturnType<typeof require> }[] = [
+  { key: "wowCooking", label: "Classic", image: require("../assets/wowCooking.png") },
+  { key: "modern", label: "Modern", image: require("../assets/icon.png") },
+];
+
 export function SettingsModal({ visible, onClose }: Props) {
+  const { appIcon, setAppIcon } = useSettings();
+
   return (
     <Modal
       animationType="fade"
@@ -25,9 +36,32 @@ export function SettingsModal({ visible, onClose }: Props) {
         <Pressable style={styles.content} onPress={() => {}}>
           <Text style={styles.title}>Paramètres</Text>
 
-          {/* Contenu à venir */}
-          <View style={styles.placeholder}>
-            <Text style={styles.placeholderText}>Aucun paramètre disponible pour l'instant</Text>
+          <Text style={styles.sectionLabel}>Icône de l'application</Text>
+          <View style={styles.iconRow}>
+            {ICONS.map(({ key, label, image }) => {
+              const selected = appIcon === key;
+              return (
+                <TouchableOpacity
+                  key={key}
+                  style={[styles.iconOption, selected && styles.iconOptionSelected]}
+                  onPress={() => setAppIcon(key)}
+                  activeOpacity={0.7}
+                >
+                  <Image source={image} style={styles.iconPreview} resizeMode="cover" />
+                  <Text style={[styles.iconLabel, selected && styles.iconLabelSelected]}>
+                    {label}
+                  </Text>
+                  {selected && (
+                    <MaterialIcons
+                      name="check-circle"
+                      size={18}
+                      color={colors.primary}
+                      style={styles.iconCheck}
+                    />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </Pressable>
       </Pressable>
@@ -54,16 +88,52 @@ const styles = StyleSheet.create({
     fontSize: fontSize.lg,
     fontWeight: "bold",
     color: colors.text,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
   },
-  placeholder: {
+  sectionLabel: {
+    fontSize: fontSize.sm,
+    fontWeight: "600",
+    color: colors.textMuted,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+    alignSelf: "flex-start",
+    marginBottom: spacing.md,
+  },
+  iconRow: {
+    flexDirection: "row",
+    gap: spacing.md,
+    justifyContent: "center",
+    width: "100%",
+  },
+  iconOption: {
     flex: 1,
     alignItems: "center",
-    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+    padding: spacing.sm,
+    gap: spacing.xs,
   },
-  placeholderText: {
-    fontSize: fontSize.md,
+  iconOptionSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryLight,
+  },
+  iconPreview: {
+    width: 64,
+    height: 64,
+    borderRadius: 14,
+  },
+  iconLabel: {
+    fontSize: fontSize.sm,
+    fontWeight: "600",
     color: colors.textMuted,
-    textAlign: "center",
+  },
+  iconLabelSelected: {
+    color: colors.primary,
+  },
+  iconCheck: {
+    position: "absolute",
+    top: spacing.xs,
+    right: spacing.xs,
   },
 });

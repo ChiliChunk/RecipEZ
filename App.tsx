@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useFonts, Barriecito_400Regular } from '@expo-google-fonts/barriecito';
 import { RecipesProvider } from './contexts/RecipesContext';
+import { SettingsProvider } from './contexts/SettingsContext';
 import Home from './screens/Home';
 import RecipeDetail from './screens/RecipeDetail';
 
@@ -23,6 +24,7 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      <SettingsProvider>
       <RecipesProvider>
         <NavigationContainer>
           <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -32,6 +34,7 @@ export default function App() {
           <StatusBar style="auto" />
         </NavigationContainer>
       </RecipesProvider>
+      </SettingsProvider>
     </GestureHandlerRootView>
   );
 }

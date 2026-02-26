@@ -26,7 +26,20 @@
       "favicon": "./assets/wowCooking.png"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-dynamic-app-icon",
+        {
+          "wowCooking": {
+            "image": "./assets/wowCooking.png",
+            "prerendered": true
+          },
+          "modern": {
+            "image": "./assets/icon.png",
+            "prerendered": true
+          }
+        }
+      ]
     ]
   }
 }
