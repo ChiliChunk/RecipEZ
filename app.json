@@ -28,6 +28,7 @@
     },
     "plugins": [
       "expo-font",
+      "./plugins/withDynamicAppIconFix",
       [
         "expo-dynamic-app-icon",
         {
