@@ -1,4 +1,5 @@
 import { useState } from "react";
+import * as ImagePicker from "expo-image-picker";
 import {
   StyleSheet,
   Text,
@@ -46,6 +47,7 @@ export default function RecipeDetail({ navigation, route }: Props) {
   const [editIngredients, setEditIngredients] = useState<string[]>(autoEdit ? [...recipe.ingredients] : []);
   const [editInstructions, setEditInstructions] = useState<string[]>(autoEdit ? [...recipe.instructions] : []);
   const [editNotes, setEditNotes] = useState(autoEdit ? (recipe.notes ?? "") : "");
+  const [editImageUrl, setEditImageUrl] = useState<string | null>(autoEdit ? recipe.imageUrl : null);
   const [saving, setSaving] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
@@ -55,7 +57,22 @@ export default function RecipeDetail({ navigation, route }: Props) {
     setEditIngredients([...recipe.ingredients]);
     setEditInstructions([...recipe.instructions]);
     setEditNotes(recipe.notes ?? "");
+    setEditImageUrl(recipe.imageUrl);
     setIsEditing(true);
+  };
+
+  const handlePickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+    if (!result.canceled) {
+      setEditImageUrl(result.assets[0].uri);
+    }
   };
 
   const handleCancel = () => setIsEditing(false);
@@ -69,6 +86,7 @@ export default function RecipeDetail({ navigation, route }: Props) {
       ingredients: editIngredients.filter((i) => i.trim() !== ""),
       instructions: editInstructions.filter((s) => s.trim() !== ""),
       notes: editNotes.trim() || undefined,
+      imageUrl: editImageUrl,
     };
     await updateRecipe(updated);
     navigation.setParams({ recipe: updated });
@@ -107,6 +125,26 @@ export default function RecipeDetail({ navigation, route }: Props) {
       >
         {isEditing ? (
           <View style={styles.editContainer}>
+            {editImageUrl ? (
+              <TouchableOpacity style={styles.editImageContainer} onPress={handlePickImage} activeOpacity={0.85}>
+                <Image source={{ uri: editImageUrl }} style={styles.editImage} />
+                <View style={[styles.editImageOverlay, { backgroundColor: colors.overlay }]}>
+                  <Feather name="camera" size={20} color="#fff" />
+                  <Text style={styles.editImageOverlayText}>Modifier</Text>
+                </View>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.editImagePlaceholder, { borderColor: colors.border, backgroundColor: colors.surface }]}
+                onPress={handlePickImage}
+              >
+                <Feather name="image" size={28} color={colors.textMuted} />
+                <Text style={[styles.editImagePlaceholderText, { color: colors.textMuted }]}>
+                  Ajouter une photo
+                </Text>
+              </TouchableOpacity>
+            )}
+
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
               Titre
             </Text>
@@ -673,6 +711,48 @@ const styles = StyleSheet.create({
   editContainer: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
+  },
+  editImageContainer: {
+    width: "100%",
+    height: 180,
+    borderRadius: borderRadius.sm,
+    overflow: "hidden",
+    marginBottom: spacing.md,
+  },
+  editImage: {
+    width: "100%",
+    height: "100%",
+  },
+  editImageOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+  },
+  editImageOverlayText: {
+    color: "#fff",
+    fontSize: fontSize.sm,
+    fontWeight: "600",
+  },
+  editImagePlaceholder: {
+    width: "100%",
+    height: 120,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderRadius: borderRadius.sm,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  editImagePlaceholderText: {
+    fontSize: fontSize.sm,
+    fontWeight: "600",
   },
   editInput: {
     borderWidth: 1,
