@@ -10,8 +10,9 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { StorageAccessFramework, writeAsStringAsync, EncodingType } from "expo-file-system/legacy";
+import { writeAsStringAsync, EncodingType } from "expo-file-system/legacy";
 import { File } from "expo-file-system";
+import * as IntentLauncher from "expo-intent-launcher";
 import * as DocumentPicker from "expo-document-picker";
 import { MaterialIcons } from "@expo/vector-icons";
 import { spacing, borderRadius, fontSize } from "../styles/theme";
@@ -41,13 +42,14 @@ export function SettingsModal({ visible, onClose }: Props) {
     try {
       const json = JSON.stringify(items, null, 2);
       const filename = `recipease_export_${new Date().toISOString().slice(0, 10)}.json`;
-      const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
-      if (!permissions.granted) { setExporting(false); return; }
-      const uri = await StorageAccessFramework.createFileAsync(
-        permissions.directoryUri, filename, "application/json",
+      const result = await IntentLauncher.startActivityAsync(
+        "android.intent.action.CREATE_DOCUMENT",
+        { type: "application/json", extra: { "android.intent.extra.TITLE": filename } },
       );
-      await writeAsStringAsync(uri, json, { encoding: EncodingType.UTF8 });
-      Alert.alert("Export réussi", `Fichier sauvegardé : ${filename}`);
+      if (result.resultCode === IntentLauncher.ResultCode.Success && result.data) {
+        await writeAsStringAsync(result.data, json, { encoding: EncodingType.UTF8 });
+        Alert.alert("Export réussi", `Fichier sauvegardé : ${filename}`);
+      }
     } catch (e) {
       Alert.alert("Erreur", e instanceof Error ? e.message : String(e));
     } finally {
