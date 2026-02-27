@@ -4,11 +4,11 @@
     "slug": "recipease",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/wowCooking.png",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/wowCooking.png",
+      "image": "./assets/icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -17,31 +17,17 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#FFF8F2"
+        "foregroundImage": "./assets/adaptive-icon-foreground.png",
+        "backgroundImage": "./assets/adaptive-icon-background.png"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.chilichunk.recipease"
     },
     "web": {
-      "favicon": "./assets/wowCooking.png"
+      "favicon": "./assets/icon.png"
     },
     "plugins": [
-      "expo-font",
-      "./plugins/withDynamicAppIconFix",
-      [
-        "expo-dynamic-app-icon",
-        {
-          "wow_cooking": {
-            "image": "./assets/wowCooking.png",
-            "prerendered": true
-          },
-          "modern": {
-            "image": "./assets/icon.png",
-            "prerendered": true
-          }
-        }
-      ]
+      "expo-font"
     ],
     "extra": {
       "eas": {

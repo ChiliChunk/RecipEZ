@@ -6,7 +6,6 @@ import {
   Modal,
   Pressable,
   TouchableOpacity,
-  Image,
   Switch,
   Alert,
   ActivityIndicator,
@@ -16,7 +15,7 @@ import { File } from "expo-file-system";
 import * as DocumentPicker from "expo-document-picker";
 import { MaterialIcons } from "@expo/vector-icons";
 import { spacing, borderRadius, fontSize } from "../styles/theme";
-import { useSettings, useColors, type AppIcon } from "../contexts/SettingsContext";
+import { useSettings, useColors } from "../contexts/SettingsContext";
 import { useRecipes } from "../contexts/RecipesContext";
 
 type Props = {
@@ -30,13 +29,8 @@ type ImportStep =
   | { stage: "done"; success: true; details: string; recipeCount: number }
   | { stage: "done"; success: false; message: string };
 
-const ICONS: { key: AppIcon; label: string; image: ReturnType<typeof require> }[] = [
-  { key: "wow_cooking", label: "Classic", image: require("../assets/wowCooking.png") },
-  { key: "modern", label: "Modern", image: require("../assets/icon.png") },
-];
-
 export function SettingsModal({ visible, onClose }: Props) {
-  const { appIcon, setAppIcon, darkMode, toggleDarkMode } = useSettings();
+  const { darkMode, toggleDarkMode } = useSettings();
   const colors = useColors();
   const { items, importItems } = useRecipes();
   const [exporting, setExporting] = useState(false);
@@ -175,39 +169,7 @@ export function SettingsModal({ visible, onClose }: Props) {
           <Pressable style={[styles.content, { backgroundColor: colors.surface }]} onPress={() => {}}>
             <Text style={[styles.title, { color: colors.text }]}>Paramètres</Text>
 
-            <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Icône de l'application</Text>
-            <View style={styles.iconRow}>
-              {ICONS.map(({ key, label, image }) => {
-                const selected = appIcon === key;
-                return (
-                  <TouchableOpacity
-                    key={key}
-                    style={[
-                      styles.iconOption,
-                      { borderColor: colors.border },
-                      selected && { borderColor: colors.primary, backgroundColor: colors.primaryLight },
-                    ]}
-                    onPress={() => setAppIcon(key)}
-                    activeOpacity={0.7}
-                  >
-                    <Image source={image} style={styles.iconPreview} resizeMode="cover" />
-                    <Text style={[styles.iconLabel, { color: selected ? colors.primary : colors.textMuted }]}>
-                      {label}
-                    </Text>
-                    {selected && (
-                      <MaterialIcons
-                        name="check-circle"
-                        size={18}
-                        color={colors.primary}
-                        style={styles.iconCheck}
-                      />
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            <Text style={[styles.sectionLabel, { color: colors.textMuted, marginTop: spacing.lg }]}>Apparence</Text>
+            <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Apparence</Text>
             <View style={styles.switchRow}>
               <MaterialIcons name="dark-mode" size={20} color={colors.textMuted} />
               <Text style={[styles.switchLabel, { color: colors.text }]}>Thème sombre</Text>
@@ -288,34 +250,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     alignSelf: "flex-start",
     marginBottom: spacing.md,
-  },
-  iconRow: {
-    flexDirection: "row",
-    gap: spacing.md,
-    justifyContent: "center",
-    width: "100%",
-  },
-  iconOption: {
-    flex: 1,
-    alignItems: "center",
-    borderWidth: 2,
-    borderRadius: borderRadius.md,
-    padding: spacing.sm,
-    gap: spacing.xs,
-  },
-  iconPreview: {
-    width: 64,
-    height: 64,
-    borderRadius: 14,
-  },
-  iconLabel: {
-    fontSize: fontSize.sm,
-    fontWeight: "600",
-  },
-  iconCheck: {
-    position: "absolute",
-    top: spacing.xs,
-    right: spacing.xs,
   },
   switchRow: {
     flexDirection: "row",

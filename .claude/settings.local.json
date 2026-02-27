@@ -8,7 +8,12 @@
       "Bash(kill:*)",
       "Bash(lsof:*)",
       "Bash(xargs kill:*)",
-      "Bash(npm ls:*)"
+      "Bash(npm ls:*)",
+      "Bash(npm uninstall expo-dynamic-app-icon)",
+      "Bash(unzip -l ic_launcher.zip)",
+      "Bash(unzip -o ic_launcher.zip 1024.png -d .)",
+      "Bash(unzip -o ic_launcher.zip res/mipmap-xxxhdpi/ic_launcher_adaptive_fore.png res/mipmap-xxxhdpi/ic_launcher_adaptive_back.png -d .)",
+      "Bash(ls -la \"C:/SynapseDevEnv/RecipEZ/assets/\"*.png)"
     ]
   }
 }
