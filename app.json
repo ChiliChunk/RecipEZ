@@ -18,7 +18,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon-foreground.png",
-        "backgroundImage": "./assets/adaptive-icon-background.png"
+        "backgroundColor": "#FFF8F2"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.chilichunk.recipease"
