@@ -14,6 +14,7 @@ export interface StoredRecipe extends Recipe {
   id: string;
   savedAt: number;
   sortOrder: number;
+  notes?: string;
 }
 
 export interface Separator {
