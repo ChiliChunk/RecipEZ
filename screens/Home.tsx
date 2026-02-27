@@ -164,6 +164,7 @@ export default function Home({ navigation }: Props) {
         visible={importVisible}
         onClose={() => setImportVisible(false)}
         onImported={(recipe) => navigation.navigate("RecipeDetail", { recipe })}
+        onCreateManual={(recipe) => navigation.navigate("RecipeDetail", { recipe, autoEdit: true })}
       />
       <AddSeparatorModal
         visible={separatorVisible}

@@ -39,12 +39,13 @@ export default function RecipeDetail({ navigation, route }: Props) {
   const { updateRecipe, deleteItem } = useRecipes();
   const { recipe } = route.params;
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [editTitle, setEditTitle] = useState("");
-  const [editServings, setEditServings] = useState("");
-  const [editIngredients, setEditIngredients] = useState<string[]>([]);
-  const [editInstructions, setEditInstructions] = useState<string[]>([]);
-  const [editNotes, setEditNotes] = useState("");
+  const autoEdit = route.params.autoEdit ?? false;
+  const [isEditing, setIsEditing] = useState(autoEdit);
+  const [editTitle, setEditTitle] = useState(autoEdit ? recipe.title : "");
+  const [editServings, setEditServings] = useState(autoEdit ? (recipe.servings ?? "") : "");
+  const [editIngredients, setEditIngredients] = useState<string[]>(autoEdit ? [...recipe.ingredients] : []);
+  const [editInstructions, setEditInstructions] = useState<string[]>(autoEdit ? [...recipe.instructions] : []);
+  const [editNotes, setEditNotes] = useState(autoEdit ? (recipe.notes ?? "") : "");
   const [saving, setSaving] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
@@ -431,14 +432,16 @@ export default function RecipeDetail({ navigation, route }: Props) {
               </View>
             )}
 
-            <TouchableOpacity
-              style={styles.sourceLink}
-              onPress={() => Linking.openURL(recipe.sourceUrl)}
-            >
-              <Text style={[styles.sourceLinkText, { color: colors.primary }]}>
-                Voir la recette originale
-              </Text>
-            </TouchableOpacity>
+            {!recipe.sourceUrl.startsWith("local://") && (
+              <TouchableOpacity
+                style={styles.sourceLink}
+                onPress={() => Linking.openURL(recipe.sourceUrl)}
+              >
+                <Text style={[styles.sourceLinkText, { color: colors.primary }]}>
+                  Voir la recette originale
+                </Text>
+              </TouchableOpacity>
+            )}
           </>
         )}
       </ScrollView>

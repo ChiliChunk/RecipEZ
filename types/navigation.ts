@@ -2,5 +2,5 @@ import type { StoredRecipe } from './recipe';
 
 export type RootStackParamList = {
   Home: undefined;
-  RecipeDetail: { recipe: StoredRecipe };
+  RecipeDetail: { recipe: StoredRecipe; autoEdit?: boolean };
 };
