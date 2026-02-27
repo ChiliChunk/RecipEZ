@@ -1,5 +1,6 @@
 import { useState } from "react";
 import * as ImagePicker from "expo-image-picker";
+import { copyAsync, makeDirectoryAsync, documentDirectory } from "expo-file-system/legacy";
 import {
   StyleSheet,
   Text,
@@ -71,7 +72,11 @@ export default function RecipeDetail({ navigation, route }: Props) {
       quality: 0.8,
     });
     if (!result.canceled) {
-      setEditImageUrl(result.assets[0].uri);
+      const imagesDir = documentDirectory + "images/";
+      await makeDirectoryAsync(imagesDir, { intermediates: true });
+      const destUri = imagesDir + `recipe_img_${Date.now()}.jpg`;
+      await copyAsync({ from: result.assets[0].uri, to: destUri });
+      setEditImageUrl(destUri);
     }
   };
 

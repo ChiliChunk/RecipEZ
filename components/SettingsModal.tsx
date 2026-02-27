@@ -10,7 +10,7 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { writeAsStringAsync, EncodingType } from "expo-file-system/legacy";
+import { writeAsStringAsync, readAsStringAsync, makeDirectoryAsync, documentDirectory, EncodingType } from "expo-file-system/legacy";
 import { File } from "expo-file-system";
 import * as IntentLauncher from "expo-intent-launcher";
 import * as DocumentPicker from "expo-document-picker";
@@ -40,7 +40,17 @@ export function SettingsModal({ visible, onClose }: Props) {
   const handleExport = async () => {
     setExporting(true);
     try {
-      const json = JSON.stringify(items, null, 2);
+      const exportItems = await Promise.all(items.map(async (item) => {
+        const imageUrl = (item as { imageUrl?: string | null }).imageUrl;
+        if (!imageUrl?.startsWith("file://")) return item;
+        try {
+          const base64 = await readAsStringAsync(imageUrl, { encoding: EncodingType.Base64 });
+          return { ...item, imageUrl: `data:image/jpeg;base64,${base64}` };
+        } catch {
+          return item;
+        }
+      }));
+      const json = JSON.stringify(exportItems, null, 2);
       const filename = `recipease_export_${new Date().toISOString().slice(0, 10)}.json`;
       const result = await IntentLauncher.startActivityAsync(
         "android.intent.action.CREATE_DOCUMENT",
@@ -84,7 +94,20 @@ export function SettingsModal({ visible, onClose }: Props) {
     const { parsed, details, recipeCount } = importStep;
     setImportStep({ stage: "loading" });
     try {
-      await importItems(parsed as Parameters<typeof importItems>[0]);
+      const imagesDir = documentDirectory + "images/";
+      await makeDirectoryAsync(imagesDir, { intermediates: true });
+      const processedParsed = await Promise.all((parsed as { imageUrl?: string | null }[]).map(async (item) => {
+        if (!item.imageUrl?.startsWith("data:image/")) return item;
+        try {
+          const base64 = item.imageUrl.split(",")[1];
+          const destUri = imagesDir + `recipe_img_${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+          await writeAsStringAsync(destUri, base64, { encoding: EncodingType.Base64 });
+          return { ...item, imageUrl: destUri };
+        } catch {
+          return { ...item, imageUrl: null };
+        }
+      }));
+      await importItems(processedParsed as Parameters<typeof importItems>[0]);
       setImportStep({ stage: "done", success: true, details, recipeCount });
     } catch (e) {
       setImportStep({ stage: "done", success: false, message: e instanceof Error ? e.message : String(e) });
